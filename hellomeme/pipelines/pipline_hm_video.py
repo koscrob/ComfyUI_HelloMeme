@@ -12,6 +12,7 @@ adapted from: https://github.com/huggingface/diffusers/blob/main/src/diffusers/p
 import copy
 from typing import Any, Callable, Dict, List, Optional, Union
 import torch
+from einops import rearrange
 
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import PipelineImageInput
@@ -23,7 +24,6 @@ from diffusers import StableDiffusionImg2ImgPipeline, MotionAdapter, EulerDiscre
 
 from ..models import HMDenoising3D, HMDenoisingMotion, HMControlNet, HMControlNet2, HMV2ControlNet, HMV2ControlNet2
 from ..models import HMReferenceAdapter
-from ..utils import dicts_to_device, cat_dicts, cat_dicts_ref
 
 class HMVideoPipeline(StableDiffusionImg2ImgPipeline):
     def caryomitosis(self, version, **kwargs):
@@ -446,3 +446,32 @@ class HMVideoPipeline(StableDiffusionImg2ImgPipeline):
                 progress_bar.update()
         self.vae_decode.cpu()
         return res_frames, latents_res
+
+
+def merge_dicts(dictl, dictr, wl=0.5):
+    res = {}
+    for k in dictl.keys():
+        res[k] = dictl[k] * wl + dictr[k] * (1-wl)
+    return res
+
+
+def cat_dicts(dicts, dim=0):
+    res = {}
+    for k in dicts[0].keys():
+        res[k] = torch.cat([d[k].clone() for d in dicts], dim=dim)
+    return res
+
+def cat_dicts_ref(dicts):
+    res = {}
+    for k in dicts[0].keys():
+        res[k] = rearrange(torch.cat([d[k].clone().unsqueeze(1) for d in dicts], dim=1), "b f c h w -> (b f) c h w ")
+    return res
+
+def dicts_to_device(dicts, device):
+    ret = []
+    for d in dicts:
+        tmpd = {}
+        for k in d.keys():
+            tmpd[k] = d[k].clone().to(device)
+        ret.append(tmpd)
+    return ret

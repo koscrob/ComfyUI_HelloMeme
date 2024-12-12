@@ -13,7 +13,6 @@ from einops import rearrange
 
 import importlib.metadata
 import folder_paths
-import logging
 
 cur_dir = osp.dirname(osp.abspath(__file__))
 
@@ -37,13 +36,10 @@ from .hellomeme.utils import (get_drive_expression,
                               crop_and_resize,
                               det_landmarks,
                               get_torch_device,
-                              load_safetensors,
+                              append_pipline_weights,
+                              load_face_toolkits
                               )
-from diffusers.pipelines.stable_diffusion.convert_from_ckpt import (convert_ldm_unet_checkpoint,
-                                                                    convert_ldm_vae_checkpoint)
-from .hellomeme.tools import Hello3DMMPred, HelloARKitBSPred, HelloFaceAlignment, HelloCameraDemo, FanEncoder
 from .hellomeme import HMImagePipeline, HMVideoPipeline
-from transformers import CLIPVisionModelWithProjection
 
 DEFAULT_PROMPT = '(best quality), highly detailed, ultra-detailed, headshot, person, well-placed five sense organs, looking at the viewer, centered composition, sharp focus, realistic skin texture'
 
@@ -58,56 +54,6 @@ def get_models_files():
 
     return ['SD1.5'] + checkpoint_files, ['same as checkpoint', 'SD1.5 default vae'] + vae_files, ['None'] + lora_files
 
-def append_pipline_weights(pipeline, checkpoint=None, lora=None, vae=None, stylize='x1'):
-    ### load customized checkpoint or lora here:
-    ## checkpoints
-
-    raw_stats = None
-    if checkpoint and not checkpoint.startswith('SD1.5'):
-        checkpoint_path = folder_paths.get_full_path_or_raise("checkpoints", checkpoint)
-        if osp.exists(checkpoint_path):
-            print("Loading checkpoint from", checkpoint_path)
-            if checkpoint_path.endswith('.safetensors'):
-                raw_stats = load_safetensors(checkpoint_path)
-            else:
-                raw_stats = torch.load(checkpoint_path)
-
-            if raw_stats:
-                state_dict = convert_ldm_unet_checkpoint(raw_stats, pipeline.unet_ref.config)
-                if hasattr(pipeline, 'unet_pre'):
-                    pipeline.unet_pre.load_state_dict(state_dict, strict=False)
-                pipeline.unet.load_state_dict(state_dict, strict=False)
-
-                if stylize == 'x2' and hasattr(pipeline, 'unet_ref'):
-                    pipeline.unet_ref.load_state_dict(state_dict, strict=False)
-
-    if vae and not vae.startswith('SD1.5 default vae'):
-        raw_vae_stats = raw_stats
-        real_vae_path = ''
-        if vae.startswith("[checkpoint] "):
-            real_vae_path = folder_paths.get_full_path_or_raise("checkpoints", vae.replace("[checkpoint] ", ""))
-        elif vae.startswith("[vae] "):
-            real_vae_path = folder_paths.get_full_path_or_raise("vae", vae.replace("[vae] ", ""))
-        if osp.isfile(real_vae_path):
-            print("Loading vae from", real_vae_path)
-            if real_vae_path.endswith('.safetensors'):
-                raw_vae_stats = load_safetensors(real_vae_path)
-            else:
-                raw_vae_stats = torch.load(real_vae_path)
-
-        if raw_vae_stats:
-            vae_state_dict = convert_ldm_vae_checkpoint(raw_vae_stats, pipeline.vae.config)
-            if hasattr(pipeline, 'vae_decode'):
-                pipeline.vae_decode.load_state_dict(vae_state_dict, strict=True)
-            if stylize == 'x2':
-                pipeline.vae.load_state_dict(vae_state_dict, strict=True)
-
-    ### lora
-    if lora and not lora.startswith('None'):
-        lora_path = folder_paths.get_full_path_or_raise("loras", lora)
-        if osp.exists(lora_path):
-            print("Loading lora from", lora_path)
-            pipeline.load_lora_weights(osp.dirname(lora_path), weight_name=osp.basename(lora_path), adapter_name="lora")
 
 class HMImagePipelineLoader:
     @classmethod
@@ -133,7 +79,24 @@ class HMImagePipelineLoader:
         pipeline.to(dtype=dtype)
         pipeline.caryomitosis(version=version)
 
-        append_pipline_weights(pipeline, checkpoint=checkpoint, lora=lora, vae=vae, stylize=stylize)
+        if checkpoint and not checkpoint.startswith('SD1.5'):
+            checkpoint_path = folder_paths.get_full_path_or_raise("checkpoints", checkpoint)
+        else:
+            checkpoint_path = checkpoint
+        if vae and vae.startswith("[checkpoint] "):
+            vae_path = folder_paths.get_full_path_or_raise("checkpoints", vae.replace("[checkpoint] ", ""))
+        elif vae and vae.startswith("[vae] "):
+            vae_path = folder_paths.get_full_path_or_raise("vae", vae.replace("[vae] ", ""))
+        else:
+            vae_path = vae
+
+        if lora and not lora.startswith('None'):
+            lora_path = folder_paths.get_full_path_or_raise("loras", lora)
+        else:
+            lora_path = lora
+
+        append_pipline_weights(pipeline, checkpoint_path=checkpoint_path, lora_path=lora_path, vae_path=vae_path,
+                               stylize=stylize)
 
         pipeline.insert_hm_modules(version=version, dtype=dtype)
         
@@ -166,7 +129,23 @@ class HMVideoPipelineLoader:
         pipeline.to(dtype=dtype)
         pipeline.caryomitosis(version=version)
 
-        append_pipline_weights(pipeline, checkpoint=checkpoint, lora=lora, vae=vae, stylize=stylize)
+        if checkpoint and not checkpoint.startswith('SD1.5'):
+            checkpoint_path = folder_paths.get_full_path_or_raise("checkpoints", checkpoint)
+        else:
+            checkpoint_path = checkpoint
+        if vae and vae.startswith("[checkpoint] "):
+            vae_path = folder_paths.get_full_path_or_raise("checkpoints", vae.replace("[checkpoint] ", ""))
+        elif vae and vae.startswith("[vae] "):
+            vae_path = folder_paths.get_full_path_or_raise("vae", vae.replace("[vae] ", ""))
+        else:
+            vae_path = vae
+
+        if lora and not lora.startswith('None'):
+            lora_path = folder_paths.get_full_path_or_raise("loras", lora)
+        else:
+            lora_path = lora
+
+        append_pipline_weights(pipeline, checkpoint_path=checkpoint_path, lora_path=lora_path, vae_path=vae_path, stylize=stylize)
 
         pipeline.insert_hm_modules(version=version, dtype=dtype)
 
@@ -186,24 +165,12 @@ class HMFaceToolkitsLoader:
     RETURN_NAMES = ("face_toolkits",)
     FUNCTION = "load_face_toolkits"
     CATEGORY = "hellomeme"
+
     def load_face_toolkits(self, gpu_id):
         dtype = torch.float16
-        image_encoder = CLIPVisionModelWithProjection.from_pretrained(
-                'h94/IP-Adapter', subfolder='models/image_encoder')
-        image_encoder.to(dtype=dtype).cpu()
-        pd_fpg_motion = FanEncoder.from_pretrained("songkey/pd_fgc_motion")
-        pd_fpg_motion.to(dtype=dtype).cpu()
-        return (
-            dict(
-                 device=get_torch_device(gpu_id),
-                 dtype=dtype,
-                 pd_fpg_motion=pd_fpg_motion,
-                 face_aligner=HelloCameraDemo(face_alignment_module=HelloFaceAlignment(gpu_id=gpu_id), reset=False),
-                 harkit_bs=HelloARKitBSPred(gpu_id=gpu_id),
-                 h3dmm=Hello3DMMPred(gpu_id=gpu_id),
-                 image_encoder=image_encoder
-            ),
-        )
+        face_toolkits = load_face_toolkits(dtype=dtype, gpu_id=gpu_id)
+        return (face_toolkits, )
+
 
 class CropPortrait:
     @classmethod
