@@ -19,15 +19,18 @@ cur_dir = osp.dirname(osp.abspath(__file__))
 installed_packages = [package.name for package in importlib.metadata.distributions()]
 
 REQUIRED = {
-  'diffusers', 'transformers', 'einops', 'opencv-python', 'tqdm', 'pillow', 'onnxruntime-gpu', 'onnx', 'safetensors', 'accelerate', 'peft'
+    'diffusers':'0.31.0', 'transformers':'4.46.3', 'einops':'0.8.0', 'opencv-python':'4.10.0.84', 'tqdm':'4.67.0',
+    'pillow':'10.2.0', 'onnxruntime-gpu':'1.18.1', 'onnx':'1.20.0', 'safetensors':'0.4.5',
+    'accelerate':'1.1.1', 'peft':'0.13.2'
 }
 
-missing = [name for name in REQUIRED if name not in installed_packages]
-print("missing pkgs", missing)
+missing = [name for name in REQUIRED.keys() if name not in installed_packages]
+missing_params = ' '.join([f'{k}=={REQUIRED[k]}' for k in missing])
+print("missing pkgs", missing_params)
 
 if missing:
     python = sys.executable
-    subprocess.check_call([python, '-m', 'pip', 'install', *missing], stdout=subprocess.DEVNULL)
+    subprocess.check_call([python, '-m', 'pip', 'install', missing_params], stdout=subprocess.DEVNULL)
 
 from .hellomeme.utils import (get_drive_expression,
                               get_drive_expression_pd_fgc,
