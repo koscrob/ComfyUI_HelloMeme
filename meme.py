@@ -70,17 +70,18 @@ class HMImagePipelineLoader:
                 "vae": (vae_files, ),
                 "version": (['v1', 'v2'], ),
                 "stylize": (['x1', 'x2'], ),
+                "deployment": (['diffusers', 'modelscope'], ),
             }
         }
     RETURN_TYPES = ("HMIMAGEPIPELINE", )
     RETURN_NAMES = ("hm_image_pipeline", )
     FUNCTION = "load_pipeline"
     CATEGORY = "hellomeme"
-    def load_pipeline(self, checkpoint=None, lora=None, vae=None, version='v2', stylize='x1'):
+    def load_pipeline(self, checkpoint=None, lora=None, vae=None, version='v2', stylize='x1', deployment='diffusers'):
         dtype = torch.float16
         pipeline = HMImagePipeline.from_pretrained("stable-diffusion-v1-5/stable-diffusion-v1-5")
         pipeline.to(dtype=dtype)
-        pipeline.caryomitosis(version=version)
+        pipeline.caryomitosis(version=version, modelscope=deployment=='modelscope')
 
         if checkpoint and not checkpoint.startswith('SD1.5'):
             checkpoint_path = folder_paths.get_full_path_or_raise("checkpoints", checkpoint)
@@ -101,7 +102,7 @@ class HMImagePipelineLoader:
         append_pipline_weights(pipeline, checkpoint_path=checkpoint_path, lora_path=lora_path, vae_path=vae_path,
                                stylize=stylize)
 
-        pipeline.insert_hm_modules(version=version, dtype=dtype)
+        pipeline.insert_hm_modules(version=version, dtype=dtype, modelscope=deployment=='modelscope')
         
         return (pipeline, )
 
@@ -118,6 +119,7 @@ class HMVideoPipelineLoader:
                 "vae": (vae_files, ),
                 "version": (['v1', 'v2'], ),
                 "stylize": (['x1', 'x2'], ),
+                "deployment": (['diffusers', 'modelscope'], ),
             }
         }
 
@@ -126,11 +128,11 @@ class HMVideoPipelineLoader:
     FUNCTION = "load_pipeline"
     CATEGORY = "hellomeme"
 
-    def load_pipeline(self, checkpoint=None, lora=None, vae=None, version='v2', stylize='x1'):
+    def load_pipeline(self, checkpoint=None, lora=None, vae=None, version='v2', stylize='x1', deployment='diffusers'):
         dtype = torch.float16
         pipeline = HMVideoPipeline.from_pretrained("stable-diffusion-v1-5/stable-diffusion-v1-5")
         pipeline.to(dtype=dtype)
-        pipeline.caryomitosis(version=version)
+        pipeline.caryomitosis(version=version, modelscope=deployment=='modelscope')
 
         if checkpoint and not checkpoint.startswith('SD1.5'):
             checkpoint_path = folder_paths.get_full_path_or_raise("checkpoints", checkpoint)
@@ -150,7 +152,7 @@ class HMVideoPipelineLoader:
 
         append_pipline_weights(pipeline, checkpoint_path=checkpoint_path, lora_path=lora_path, vae_path=vae_path, stylize=stylize)
 
-        pipeline.insert_hm_modules(version=version, dtype=dtype)
+        pipeline.insert_hm_modules(version=version, dtype=dtype, modelscope=deployment=='modelscope')
 
         return (pipeline,)
 
@@ -161,6 +163,7 @@ class HMFaceToolkitsLoader:
         return {
             "required": {
                 "gpu_id": ("INT", {"default": 0, "min": -1, "max": 16}, ),
+                "deployment": (['diffusers', 'modelscope'], ),
             }
         }
 
@@ -169,9 +172,9 @@ class HMFaceToolkitsLoader:
     FUNCTION = "load_face_toolkits"
     CATEGORY = "hellomeme"
 
-    def load_face_toolkits(self, gpu_id):
+    def load_face_toolkits(self, gpu_id, deployment='diffusers'):
         dtype = torch.float16
-        face_toolkits = load_face_toolkits(dtype=dtype, gpu_id=gpu_id)
+        face_toolkits = load_face_toolkits(dtype=dtype, gpu_id=gpu_id, modelscope=deployment=='modelscope')
         return (face_toolkits, )
 
 

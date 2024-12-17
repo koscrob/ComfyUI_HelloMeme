@@ -18,10 +18,12 @@
     <a href='https://arxiv.org/pdf/2410.22901'><img src='https://img.shields.io/badge/Paper-Arxiv-red'></a>
     <a href='https://huggingface.co/songkey'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-Model-yellow'></a>
     <a href='https://github.com/HelloVision/HelloMeme'><img src='https://img.shields.io/badge/GitHub-Code-blue'></a>
+    <a href='https://www.modelscope.cn/studios/songkey/HelloMeme'><img src='https://img.shields.io/badge/modelscpe-Demo-red'></a>
 </div>
 
 
 ## 🔆 New Features/Updates
+- ✅ `12/17/2024` Support modelscope ([Modelscope Demo](https://www.modelscope.cn/studios/songkey/HelloMeme)).
 - ✅ `12/08/2024` Added **HelloMemeV2** (select "v2" in the version option of the LoadHelloMemeImage/Video Node). Its features include:
 a. Improved expression consistency between the generated video and the driving video.
 b. Better compatibility with third-party checkpoints (*we will continuously collect compatible free third-party checkpoints and share them on this page. If you'd like to recommend one, please post it on the issue page or email us at songkey@pku.edu.cn*).
