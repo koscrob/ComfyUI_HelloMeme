@@ -70,14 +70,14 @@ class HMImagePipelineLoader:
                 "vae": (vae_files, ),
                 "version": (['v1', 'v2'], ),
                 "stylize": (['x1', 'x2'], ),
-                "deployment": (['diffusers', 'modelscope'], ),
+                "deployment": (['huggingface', 'modelscope'], ),
             }
         }
     RETURN_TYPES = ("HMIMAGEPIPELINE", )
     RETURN_NAMES = ("hm_image_pipeline", )
     FUNCTION = "load_pipeline"
     CATEGORY = "hellomeme"
-    def load_pipeline(self, checkpoint=None, lora=None, vae=None, version='v2', stylize='x1', deployment='diffusers'):
+    def load_pipeline(self, checkpoint=None, lora=None, vae=None, version='v2', stylize='x1', deployment='huggingface'):
         dtype = torch.float16
         pipeline = HMImagePipeline.from_pretrained("stable-diffusion-v1-5/stable-diffusion-v1-5")
         pipeline.to(dtype=dtype)
@@ -119,7 +119,7 @@ class HMVideoPipelineLoader:
                 "vae": (vae_files, ),
                 "version": (['v1', 'v2'], ),
                 "stylize": (['x1', 'x2'], ),
-                "deployment": (['diffusers', 'modelscope'], ),
+                "deployment": (['huggingface', 'modelscope'], ),
             }
         }
 
@@ -128,7 +128,7 @@ class HMVideoPipelineLoader:
     FUNCTION = "load_pipeline"
     CATEGORY = "hellomeme"
 
-    def load_pipeline(self, checkpoint=None, lora=None, vae=None, version='v2', stylize='x1', deployment='diffusers'):
+    def load_pipeline(self, checkpoint=None, lora=None, vae=None, version='v2', stylize='x1', deployment='huggingface'):
         dtype = torch.float16
         pipeline = HMVideoPipeline.from_pretrained("stable-diffusion-v1-5/stable-diffusion-v1-5")
         pipeline.to(dtype=dtype)
@@ -163,7 +163,7 @@ class HMFaceToolkitsLoader:
         return {
             "required": {
                 "gpu_id": ("INT", {"default": 0, "min": -1, "max": 16}, ),
-                "deployment": (['diffusers', 'modelscope'], ),
+                "deployment": (['huggingface', 'modelscope'], ),
             }
         }
 
@@ -172,7 +172,7 @@ class HMFaceToolkitsLoader:
     FUNCTION = "load_face_toolkits"
     CATEGORY = "hellomeme"
 
-    def load_face_toolkits(self, gpu_id, deployment='diffusers'):
+    def load_face_toolkits(self, gpu_id, deployment='huggingface'):
         dtype = torch.float16
         face_toolkits = load_face_toolkits(dtype=dtype, gpu_id=gpu_id, modelscope=deployment=='modelscope')
         return (face_toolkits, )
