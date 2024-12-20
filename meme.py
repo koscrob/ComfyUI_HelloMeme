@@ -79,7 +79,7 @@ class HMImagePipelineLoader:
     CATEGORY = "hellomeme"
     def load_pipeline(self, checkpoint=None, lora=None, vae=None, version='v2', stylize='x1', deployment='huggingface'):
         dtype = torch.float16
-        pipeline = HMImagePipeline.from_pretrained("stable-diffusion-v1-5/stable-diffusion-v1-5")
+        pipeline = HMImagePipeline.from_pretrained("songkey/stable-diffusion-v1-5")
         pipeline.to(dtype=dtype)
         pipeline.caryomitosis(version=version, modelscope=deployment=='modelscope')
 
@@ -130,7 +130,7 @@ class HMVideoPipelineLoader:
 
     def load_pipeline(self, checkpoint=None, lora=None, vae=None, version='v2', stylize='x1', deployment='huggingface'):
         dtype = torch.float16
-        pipeline = HMVideoPipeline.from_pretrained("stable-diffusion-v1-5/stable-diffusion-v1-5")
+        pipeline = HMVideoPipeline.from_pretrained("songkey/stable-diffusion-v1-5")
         pipeline.to(dtype=dtype)
         pipeline.caryomitosis(version=version, modelscope=deployment=='modelscope')
 
