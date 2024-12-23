@@ -9,6 +9,6 @@ Repository = "https://github.com/HelloVision/ComfyUI_HelloMeme"
 #  Used by Comfy Registry https://comfyregistry.org
 
 [tool.comfy]
-PublisherId = "1215d66b-f871-4296-b65a-50ca0ab1999a"
+PublisherId = "hellomeme-comfyui-api"
 DisplayName = "ComfyUI_HelloMeme"
 Icon = "examples/helloicon.ico"
