@@ -11,4 +11,4 @@ Repository = "https://github.com/HelloVision/ComfyUI_HelloMeme"
 [tool.comfy]
 PublisherId = "hellomeme-api"
 DisplayName = "hellomeme-api"
-Icon = "examples/helloicon.ico"
+Icon = "examples/helloicon.png"
