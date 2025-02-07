@@ -1,3 +1,4 @@
+import json
 import os.path as osp
 import random
 
@@ -44,18 +45,63 @@ from .hellomeme.utils import (get_drive_expression,
                               )
 from .hellomeme import HMImagePipeline, HMVideoPipeline
 
-DEFAULT_PROMPT = '(best quality), highly detailed, ultra-detailed, headshot, person, well-placed five sense organs, looking at the viewer, centered composition, sharp focus, realistic skin texture'
+config_path = osp.join(cur_dir, 'hellomeme', 'model_config.json')
+with open(config_path, 'r') as f:
+    MODEL_CONFIG = json.load(f)
+
+DEFAULT_PROMPT = MODEL_CONFIG['prompt']
 
 def get_models_files():
     checkpoint_files = folder_paths.get_filename_list("checkpoints")
+    checkpoint_files = list(MODEL_CONFIG['sd15']['checkpoints'].keys()) + checkpoint_files
 
     vae_files = folder_paths.get_filename_list("vae")
     vae_files = ["[vae] " + x for x in vae_files] + \
                 ["[checkpoint] " + x for x in checkpoint_files]
+    vae_files = ['same as checkpoint', 'SD1.5 default vae'] + vae_files
 
     lora_files = folder_paths.get_filename_list("loras")
+    lora_files = ['None'] + list(MODEL_CONFIG['sd15']['loras'].keys()) + lora_files
 
-    return ['SD1.5'] + checkpoint_files, ['same as checkpoint', 'SD1.5 default vae'] + vae_files, ['None'] + lora_files
+    return checkpoint_files, vae_files, lora_files
+
+def format_model_path(pipeline, config, checkpoint, vae, lora, stylize, lora_scale, deployment):
+    if checkpoint and not checkpoint.startswith('SD1.5'):
+        if checkpoint in config['sd15']['checkpoints']:
+            tmp_checkpoint_name = config['sd15']['checkpoints'][checkpoint]
+            if deployment == 'modelscope':
+                from modelscope import snapshot_download
+                checkpoint_path = snapshot_download(tmp_checkpoint_name)
+            else:
+                checkpoint_path = tmp_checkpoint_name
+        else:
+            checkpoint_path = folder_paths.get_full_path_or_raise("checkpoints", checkpoint)
+    else:
+        checkpoint_path = checkpoint
+
+    if vae and vae.startswith("[checkpoint] "):
+        vae_path = folder_paths.get_full_path_or_raise("checkpoints", vae.replace("[checkpoint] ", ""))
+    elif vae and vae.startswith("[vae] "):
+        vae_path = folder_paths.get_full_path_or_raise("vae", vae.replace("[vae] ", ""))
+    else:
+        vae_path = vae
+
+    if lora and not lora.startswith('None'):
+        if lora in config['sd15']['loras']:
+            tmp_lora_info = config['sd15']['loras'][lora]
+            if deployment == 'modelscope':
+                from modelscope import snapshot_download
+                lora_path = osp.join(snapshot_download(tmp_lora_info[0]), tmp_lora_info[1])
+            else:
+                from huggingface_hub import hf_hub_download
+                lora_path = hf_hub_download(tmp_lora_info[0], filename=tmp_lora_info[1])
+        else:
+            lora_path = folder_paths.get_full_path_or_raise("loras", lora)
+    else:
+        lora_path = lora
+
+    append_pipline_weights(pipeline, checkpoint_path=checkpoint_path, lora_path=lora_path, vae_path=vae_path,
+                           stylize=stylize, lora_scale=lora_scale)
 
 
 class HMImagePipelineLoader:
@@ -71,41 +117,27 @@ class HMImagePipelineLoader:
                 "version": (['v1', 'v2'], ),
                 "stylize": (['x1', 'x2'], ),
                 "deployment": (['huggingface', 'modelscope'], ),
+                "lora_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1}),
             }
         }
     RETURN_TYPES = ("HMIMAGEPIPELINE", )
     RETURN_NAMES = ("hm_image_pipeline", )
     FUNCTION = "load_pipeline"
     CATEGORY = "hellomeme"
-    def load_pipeline(self, checkpoint=None, lora=None, vae=None, version='v2', stylize='x1', deployment='huggingface'):
+    def load_pipeline(self, checkpoint=None, lora=None, vae=None,
+                      version='v2', stylize='x1', deployment='huggingface', lora_scale=1.0):
         dtype = torch.float16
         if deployment == 'modelscope':
             from modelscope import snapshot_download
             sd1_5_dir = snapshot_download('songkey/stable-diffusion-v1-5')
         else:
             sd1_5_dir = "songkey/stable-diffusion-v1-5"
+
         pipeline = HMImagePipeline.from_pretrained(sd1_5_dir)
         pipeline.to(dtype=dtype)
         pipeline.caryomitosis(version=version, modelscope=deployment=='modelscope')
 
-        if checkpoint and not checkpoint.startswith('SD1.5'):
-            checkpoint_path = folder_paths.get_full_path_or_raise("checkpoints", checkpoint)
-        else:
-            checkpoint_path = checkpoint
-        if vae and vae.startswith("[checkpoint] "):
-            vae_path = folder_paths.get_full_path_or_raise("checkpoints", vae.replace("[checkpoint] ", ""))
-        elif vae and vae.startswith("[vae] "):
-            vae_path = folder_paths.get_full_path_or_raise("vae", vae.replace("[vae] ", ""))
-        else:
-            vae_path = vae
-
-        if lora and not lora.startswith('None'):
-            lora_path = folder_paths.get_full_path_or_raise("loras", lora)
-        else:
-            lora_path = lora
-
-        append_pipline_weights(pipeline, checkpoint_path=checkpoint_path, lora_path=lora_path, vae_path=vae_path,
-                               stylize=stylize)
+        format_model_path(pipeline, MODEL_CONFIG, checkpoint, vae, lora, stylize, lora_scale, deployment)
 
         pipeline.insert_hm_modules(version=version, dtype=dtype, modelscope=deployment=='modelscope')
         
@@ -125,6 +157,7 @@ class HMVideoPipelineLoader:
                 "version": (['v1', 'v2'], ),
                 "stylize": (['x1', 'x2'], ),
                 "deployment": (['huggingface', 'modelscope'], ),
+                "lora_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1}),
             }
         }
 
@@ -133,34 +166,20 @@ class HMVideoPipelineLoader:
     FUNCTION = "load_pipeline"
     CATEGORY = "hellomeme"
 
-    def load_pipeline(self, checkpoint=None, lora=None, vae=None, version='v2', stylize='x1', deployment='huggingface'):
+    def load_pipeline(self, checkpoint=None, lora=None, vae=None,
+                      version='v2', stylize='x1', deployment='huggingface', lora_scale=1.0):
         dtype = torch.float16
         if deployment == 'modelscope':
             from modelscope import snapshot_download
             sd1_5_dir = snapshot_download('songkey/stable-diffusion-v1-5')
         else:
             sd1_5_dir = "songkey/stable-diffusion-v1-5"
+
         pipeline = HMVideoPipeline.from_pretrained(sd1_5_dir)
         pipeline.to(dtype=dtype)
         pipeline.caryomitosis(version=version, modelscope=deployment=='modelscope')
 
-        if checkpoint and not checkpoint.startswith('SD1.5'):
-            checkpoint_path = folder_paths.get_full_path_or_raise("checkpoints", checkpoint)
-        else:
-            checkpoint_path = checkpoint
-        if vae and vae.startswith("[checkpoint] "):
-            vae_path = folder_paths.get_full_path_or_raise("checkpoints", vae.replace("[checkpoint] ", ""))
-        elif vae and vae.startswith("[vae] "):
-            vae_path = folder_paths.get_full_path_or_raise("vae", vae.replace("[vae] ", ""))
-        else:
-            vae_path = vae
-
-        if lora and not lora.startswith('None'):
-            lora_path = folder_paths.get_full_path_or_raise("loras", lora)
-        else:
-            lora_path = lora
-
-        append_pipline_weights(pipeline, checkpoint_path=checkpoint_path, lora_path=lora_path, vae_path=vae_path, stylize=stylize)
+        format_model_path(pipeline, MODEL_CONFIG, checkpoint, vae, lora, stylize, lora_scale, deployment)
 
         pipeline.insert_hm_modules(version=version, dtype=dtype, modelscope=deployment=='modelscope')
 
@@ -324,14 +343,14 @@ class HMPipelineImage:
                 "face_toolkits": ("FACE_TOOLKITS",),
                 "ref_image": ("IMAGE",),
                 "drive_pose": ("DRIVE_POSE",),
-                "trans_ratio": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "trans_ratio": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1}),
                 "prompt": ("STRING", {"default": DEFAULT_PROMPT}),
                 "negative_prompt": ("STRING", {"default": ''}),
                 "steps": ("INT", {"default": 25, "min": 1, "max": 10000,
                                   "tooltip": "The number of steps used in the denoising process."}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff,
                                  "tooltip": "The random seed used for creating the noise."}),
-                "guidance_scale": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 100.0, "step": 0.01}),
+                "guidance_scale": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 100.0, "step": 0.1}),
                 "gpu_id": ("INT", {"default": 0, "min": -1, "max": 16}, ),
             },
                 "optional": {
@@ -413,7 +432,7 @@ class HMPipelineVideo:
                         "face_toolkits": ("FACE_TOOLKITS",),
                         "ref_image": ("IMAGE",),
                         "drive_pose": ("DRIVE_POSE",),
-                        "trans_ratio": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
+                        "trans_ratio": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1}),
                         "patch_overlap": ("INT", {"default": 4, "min": 0, "max": 5}),
                         "prompt": ("STRING", {"default": DEFAULT_PROMPT}),
                         "negative_prompt": ("STRING", {"default": ''}),
@@ -421,7 +440,7 @@ class HMPipelineVideo:
                                           "tooltip": "The number of steps used in the denoising process."}),
                         "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff,
                                          "tooltip": "The random seed used for creating the noise."}),
-                        "guidance_scale": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 100.0, "step": 0.01}),
+                        "guidance_scale": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 100.0, "step": 0.1}),
                         "gpu_id": ("INT", {"default": 0, "min": -1, "max": 16}, ),
                      },
                     "optional": {
