@@ -1,7 +1,7 @@
 [project]
 name = "comfyui_hellomeme"
 description = "This repository is the official implementation of the [a/HelloMeme](https://arxiv.org/pdf/2410.22901) ComfyUI interface"
-version = "1.0.2"
+version = "1.0.3"
 license = {file = "LICENSE"}
 
 [project.urls]
