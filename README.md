@@ -24,7 +24,7 @@
 
 ## 🔆 New Features/Updates
 - ✅ `02/09/2025` **HelloMemeV3** is now available.
-- 
+
      [![YouTube Demo](https://img.youtube.com/vi/DAUA0EYjsZA/0.jpg)](https://www.youtube.com/watch?v=DAUA0EYjsZA)
 
 - ✅ `12/17/2024` Support modelscope ([Modelscope Demo](https://www.modelscope.cn/studios/songkey/HelloMeme)).
