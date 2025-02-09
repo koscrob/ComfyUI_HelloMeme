@@ -23,6 +23,7 @@
 
 
 ## 🔆 New Features/Updates
+- ✅ `02/09/2025` **HelloMemeV3** is now available.
 - ✅ `12/17/2024` Support modelscope ([Modelscope Demo](https://www.modelscope.cn/studios/songkey/HelloMeme)).
 - ✅ `12/08/2024` Added **HelloMemeV2** (select "v2" in the version option of the LoadHelloMemeImage/Video Node). Its features include:
 a. Improved expression consistency between the generated video and the driving video.
@@ -54,23 +55,19 @@ This repository is the official implementation of the [`HelloMeme`](https://arxi
 > **Loras** under: `ComfyUI/models/checkpoints`
 
 ## Recommended Third-party Checkpoints/Loras
-| Name | Checkpoints/Loras | Recommenders |
-|------|-------------------|--------------|
-| [realisticVisionV60B1_v51VAE](https://civitai.com/models/4201/realistic-vision-v60-b1) | Checkpoints       | |
-| [disneyPixarCartoon_v10](https://civitai.com/models/65203/disney-pixar-cartoon-type-a) | Checkpoints             | |
+| Name | Checkpoints/Loras |
+|------|-------------------|
+| [realisticVisionV60B1_v51VAE](https://civitai.com/models/4201/realistic-vision-v60-b1) | Checkpoints       |
+| [disneyPixarCartoon_v10](https://civitai.com/models/65203/disney-pixar-cartoon-type-a) | Checkpoints             |
 
 ### Workflows
 
-| workflow file | Video Generation | Image Generation | HMControlNet | HMControlNet2 | Super-Resolution |
-|---------------|------------------|------------------|-----------|---------------|-----------------|
-| hellomeme_image_workflow.json |                  | ✅                | ✅ |  |  |
-| hellomeme_video_workflow.json | ✅                |                  | ✅ |  |  |
-| hellomeme_image_sr_workflow.json |                  | ✅                | ✅ |  | ✅ |
-| hellomeme_video_sr_workflow.json | ✅                |                  | ✅ |  | ✅ |
-| hellomeme_image_v2_workflow.json |                  | ✅                |  | ✅ |  |
-| hellomeme_video_v2_workflow.json | ✅                |                  |  | ✅ |  |
-| hellomeme_image_v2_sr_workflow.json |                  | ✅                |  | ✅ | ✅ |
-| hellomeme_video_v2_sr_workflow.json | ✅                |                  |  | ✅ | ✅ |
+| workflow file | Video Generation | Image Generation | HMControlNet | HMControlNet2 |
+|---------------|------------------|------------------|-----------|---------------|
+| hellomeme_image_workflow.json |                  | ✅                | ✅ |  |
+| hellomeme_video_workflow.json | ✅                |                  | ✅ |  |
+| hellomeme_image_v2_workflow.json |                  | ✅                |  | ✅ |
+| hellomeme_video_v2_workflow.json | ✅                |                  |  | ✅ |
 
 ### Image Generation Interface
 
