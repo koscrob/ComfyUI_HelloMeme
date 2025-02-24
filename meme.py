@@ -1,19 +1,10 @@
 import json
+import os
 import os.path as osp
 import random
-
-import numpy as np
-import cv2
 import sys
-
-from PIL import Image
 import subprocess
-
-import torch
-from einops import rearrange
-
 import importlib.metadata
-import folder_paths
 
 cur_dir = osp.dirname(osp.abspath(__file__))
 
@@ -31,7 +22,19 @@ print("missing pkgs", missing_params)
 
 if missing:
     python = sys.executable
-    subprocess.check_call([python, '-m', 'pip', 'install', missing_params], stdout=subprocess.DEVNULL)
+    os.system(f'{sys.executable} -m pip install {missing_params}')
+    # subprocess.check_call([python, '-m', 'pip', 'install', missing_params], stdout=subprocess.DEVNULL)
+
+import numpy as np
+import cv2
+
+from PIL import Image
+
+import torch
+from einops import rearrange
+
+import folder_paths
+
 
 from .hellomeme.utils import (get_drive_expression,
                               get_drive_expression_pd_fgc,
