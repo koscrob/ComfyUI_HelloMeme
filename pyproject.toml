@@ -1,7 +1,7 @@
 [project]
 name = "comfyui_hellomeme"
 description = "This repository is the official implementation of the [a/HelloMeme](https://arxiv.org/pdf/2410.22901) ComfyUI interface"
-version = "1.1.6"
+version = "1.1.7"
 license = {file = "LICENSE"}
 
 [project.urls]
@@ -11,4 +11,4 @@ Repository = "https://github.com/HelloVision/ComfyUI_HelloMeme"
 [tool.comfy]
 PublisherId = "hellomeme-api"
 DisplayName = "hellomeme-api"
-Icon = "examples/helloicon.png"
+Icon = "https://github.com/HelloVision/ComfyUI_HelloMeme/blob/eee70819a114a44c4c689c865b42fa0e523a31e5/examples/helloicon.png"

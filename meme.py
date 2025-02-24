@@ -25,6 +25,9 @@ if missing:
     os.system(f'{sys.executable} -m pip install {missing_params}')
     # subprocess.check_call([python, '-m', 'pip', 'install', missing_params], stdout=subprocess.DEVNULL)
 
+from huggingface_hub import login
+login(token='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')
+
 import numpy as np
 import cv2
 
