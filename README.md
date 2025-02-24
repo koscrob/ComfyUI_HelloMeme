@@ -74,12 +74,12 @@ This repository is the official implementation of the [`HelloMeme`](https://arxi
 ### Image Generation Interface
 
 <p align="center">
-  <img src="workflows/hellomeme_image_example.png" alt="image_generation_interface">
+  <img src="example_workflows/hellomeme_image_workflow.jpg" alt="image_generation_interface">
 </p>
 
 ### Video Generation Interface
 
 <p align="center">
-  <img src="workflows/hellomeme_video_example.png" alt="video_generation_interface">
+  <img src="example_workflows/hellomeme_video_workflow.jpg" alt="video_generation_interface">
 </p>
 
