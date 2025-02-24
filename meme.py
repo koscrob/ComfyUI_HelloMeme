@@ -25,8 +25,12 @@ if missing:
     os.system(f'{sys.executable} -m pip install {missing_params}')
     # subprocess.check_call([python, '-m', 'pip', 'install', missing_params], stdout=subprocess.DEVNULL)
 
-from huggingface_hub import login
-login(token='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')
+try:
+    from huggingface_hub import login
+    # Model read permission
+    login(token='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')
+except:
+    print("login error!")
 
 import numpy as np
 import cv2
