@@ -124,7 +124,7 @@ class HMImagePipelineLoader:
                 "checkpoint": (checkpoint_files, ),
                 "lora": (lora_files, ),
                 "vae": (vae_files, ),
-                "version": (['v1', 'v2', 'v3'], ),
+                "version": (['v1', 'v2', 'v3', 'v4'], ),
                 "stylize": (['x1', 'x2'], ),
                 "deployment": (['huggingface', 'modelscope'], ),
                 "lora_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1}),
@@ -142,7 +142,7 @@ class HMImagePipelineLoader:
             sd1_5_dir = snapshot_download('songkey/stable-diffusion-v1-5')
         else:
             sd1_5_dir = "songkey/stable-diffusion-v1-5"
-        if version == 'v3':
+        if version == 'v3' or  version == 'v4':
             pipeline = HM3ImagePipeline.from_pretrained(sd1_5_dir)
         else:
             pipeline = HMImagePipeline.from_pretrained(sd1_5_dir)
@@ -166,7 +166,7 @@ class HMVideoPipelineLoader:
                 "checkpoint": (checkpoint_files, ),
                 "lora": (lora_files, ),
                 "vae": (vae_files, ),
-                "version": (['v1', 'v2', 'v3'], ),
+                "version": (['v1', 'v2', 'v3', 'v4'], ),
                 "stylize": (['x1', 'x2'], ),
                 "deployment": (['huggingface', 'modelscope'], ),
                 "lora_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1}),
@@ -187,7 +187,7 @@ class HMVideoPipelineLoader:
         else:
             sd1_5_dir = "songkey/stable-diffusion-v1-5"
 
-        if version == 'v3':
+        if version == 'v3' or  version == 'v4':
             pipeline = HM3VideoPipeline.from_pretrained(sd1_5_dir)
         else:
             pipeline = HMVideoPipeline.from_pretrained(sd1_5_dir)

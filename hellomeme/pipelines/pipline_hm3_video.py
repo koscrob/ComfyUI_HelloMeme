@@ -24,7 +24,7 @@ from diffusers import MotionAdapter, DPMSolverMultistepScheduler
 from diffusers.utils.torch_utils import randn_tensor
 
 from ..models import (HM3Denoising3D, HM3DenoisingMotion, HM3MotionAdapter,
-                      HMV3ControlNet, HM3ReferenceAdapter, HMPipeline)
+                      HMV3ControlNet, HM3ReferenceAdapter, HMPipeline, HMControlNetBase, HM4SD15ControlProj)
 
 class HM3VideoPipeline(HMPipeline):
     def caryomitosis(self, version='v3', modelscope=False, **kwargs):
@@ -58,19 +58,32 @@ class HM3VideoPipeline(HMPipeline):
         self.safety_checker.cpu()
 
     def insert_hm_modules(self, version='v3', dtype=torch.float16, modelscope=False):
+        self.version = version
+
         if modelscope:
             from modelscope import snapshot_download
-            hm_reference_dir = snapshot_download('songkey/hm3_reference')
-            hm_control_dir = snapshot_download('songkey/hm3_control_mix')
-            hm_motion_dir = snapshot_download('songkey/hm3_motion')
+            if version == 'v3':
+                hm_reference_dir = snapshot_download('songkey/hm3_reference')
+                hm_control_dir = snapshot_download('songkey/hm3_control_mix')
+                hm_motion_dir = snapshot_download('songkey/hm3_motion')
+            else:
+                hm_reference_dir = snapshot_download('songkey/hm4_reference')
+                hm_control_dir = snapshot_download('songkey/hm_control_base')
+                hm_control_proj_dir = snapshot_download('songkey/hm4_control_proj')
+                hm_motion_dir = snapshot_download('songkey/hm4_motion')
         else:
-            hm_reference_dir = 'songkey/hm3_reference'
-            hm_control_dir = 'songkey/hm3_control_mix'
-            hm_motion_dir = 'songkey/hm3_motion'
+            if version == 'v3':
+                hm_reference_dir = 'songkey/hm3_reference'
+                hm_control_dir = 'songkey/hm3_control_mix'
+                hm_motion_dir = 'songkey/hm3_motion'
+            else:
+                hm_reference_dir = 'songkey/hm4_reference'
+                hm_control_dir = 'songkey/hm_control_base'
+                hm_control_proj_dir = 'songkey/hm4_control_proj'
+                hm_motion_dir = 'songkey/hm4_motion'
 
         hm_adapter = HM3ReferenceAdapter.from_pretrained(hm_reference_dir)
         motion_adapter = HM3MotionAdapter.from_pretrained(hm_motion_dir)
-        motion_adapter = motion_adapter.to(device='cpu', dtype=dtype).eval()
 
         if isinstance(self.unet, HM3DenoisingMotion):
             self.unet.insert_reference_adapter(hm_adapter)
@@ -87,8 +100,16 @@ class HM3VideoPipeline(HMPipeline):
 
         if hasattr(self, "mp_control"):
             del self.mp_control
+        if hasattr(self, "mp_control_proj"):
+            del self.mp_control_proj
 
-        self.mp_control = HMV3ControlNet.from_pretrained(hm_control_dir)
+        if version == 'v3':
+            self.mp_control = HMV3ControlNet.from_pretrained(hm_control_dir)
+        else:
+            self.mp_control = HMControlNetBase.from_pretrained(hm_control_dir)
+            self.mp_control_proj = HM4SD15ControlProj.from_pretrained(hm_control_proj_dir)
+
+            self.mp_control_proj.to(device='cpu', dtype=dtype).eval()
         self.mp_control.to(device='cpu', dtype=dtype).eval()
 
         self.vae.to(device='cpu', dtype=dtype).eval()
@@ -456,6 +477,8 @@ class HM3VideoPipeline(HMPipeline):
         control_latents = []
         control_latent1_neg, control_latent2_neg = None, None
         self.mp_control.to(device=device)
+        if self.version == 'v4':
+            self.mp_control_proj.to(device=device)
         with self.progress_bar(total=raw_video_len) as progress_bar:
             for idx in range(raw_video_len):
                 progress_bar.set_description(f"GEN stage1")
@@ -472,10 +495,14 @@ class HM3VideoPipeline(HMPipeline):
                         control_latent1_neg = self.mp_control(condition=torch.ones_like(condition)*-1,
                                                     drive_coeff=torch.zeros_like(drive_coeff),
                                                     face_parts=torch.zeros_like(face_parts))
+                        if hasattr(self, 'mp_control_proj') and self.version == 'v4':
+                            control_latent1_neg = self.mp_control_proj(control_latent1_neg)
 
                     control_latent1 = self.mp_control(condition=condition,
                                                     drive_coeff=drive_coeff,
                                                     face_parts=face_parts)
+                    if hasattr(self, 'mp_control_proj') and self.version == 'v4':
+                        control_latent1 = self.mp_control_proj(control_latent1)
                     if self.do_classifier_free_guidance:
                         control_latent1 = cat_dicts([control_latent1_neg, control_latent1], dim=0)
 
@@ -486,8 +513,12 @@ class HM3VideoPipeline(HMPipeline):
                     if control_latent2_neg is None and self.do_classifier_free_guidance:
                         control_latent2_neg = self.mp_control(condition=torch.ones_like(condition)*-1,
                                 emo_embedding=torch.zeros_like(pd_fpg))
+                        if hasattr(self, 'mp_control_proj') and self.version == 'v4':
+                            control_latent2_neg = self.mp_control_proj(control_latent2_neg)
 
                     control_latent2 = self.mp_control(condition=condition, emo_embedding=pd_fpg)
+                    if hasattr(self, 'mp_control_proj') and self.version == 'v4':
+                        control_latent2 = self.mp_control_proj(control_latent2)
                     if self.do_classifier_free_guidance:
                         control_latent2 = cat_dicts([control_latent2_neg, control_latent2], dim=0)
 
@@ -495,6 +526,8 @@ class HM3VideoPipeline(HMPipeline):
                 control_latents.append(dicts_to_device([control_latent_input], device='cpu')[0])
 
         self.mp_control.cpu()
+        if self.version == 'v4':
+            self.mp_control_proj.cpu()
 
         more_params = dict(
             timesteps=timesteps,
