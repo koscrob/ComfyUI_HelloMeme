@@ -24,13 +24,12 @@
 
 ## 🔆 New Features/Updates
 - ✅ `02/09/2025` **HelloMemeV3** is now available.
-
-     [![YouTube Demo](https://img.youtube.com/vi/DAUA0EYjsZA/0.jpg)](https://www.youtube.com/watch?v=DAUA0EYjsZA)
+[YouTube Demo](https://www.youtube.com/watch?v=DAUA0EYjsZA)
 
 - ✅ `12/17/2024` Support modelscope ([Modelscope Demo](https://www.modelscope.cn/studios/songkey/HelloMeme)).
 - ✅ `12/08/2024` Added **HelloMemeV2** (select "v2" in the version option of the LoadHelloMemeImage/Video Node). Its features include:
 a. Improved expression consistency between the generated video and the driving video.
-b. Better compatibility with third-party checkpoints (*we will continuously collect compatible free third-party checkpoints and share them on this page. If you'd like to recommend one, please post it on the issue page or email us at songkey@pku.edu.cn*).
+b. Better compatibility with third-party checkpoints.
 c. Reduced VRAM usage.
 [YouTube Demo](https://www.youtube.com/watch?v=-2s_pLAKoRg)
 

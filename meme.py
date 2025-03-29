@@ -142,7 +142,7 @@ class HMImagePipelineLoader:
             sd1_5_dir = snapshot_download('songkey/stable-diffusion-v1-5')
         else:
             sd1_5_dir = "songkey/stable-diffusion-v1-5"
-        if version == 'v3' or  version == 'v4':
+        if version == 'v3' or version == 'v4':
             pipeline = HM3ImagePipeline.from_pretrained(sd1_5_dir)
         else:
             pipeline = HMImagePipeline.from_pretrained(sd1_5_dir)
@@ -187,7 +187,7 @@ class HMVideoPipelineLoader:
         else:
             sd1_5_dir = "songkey/stable-diffusion-v1-5"
 
-        if version == 'v3' or  version == 'v4':
+        if version == 'v3' or version == 'v4':
             pipeline = HM3VideoPipeline.from_pretrained(sd1_5_dir)
         else:
             pipeline = HMVideoPipeline.from_pretrained(sd1_5_dir)

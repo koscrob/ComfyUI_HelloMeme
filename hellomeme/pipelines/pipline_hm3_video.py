@@ -20,7 +20,7 @@ from diffusers.image_processor import PipelineImageInput
 from diffusers.utils import deprecate
 
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_timesteps, retrieve_latents
-from diffusers import MotionAdapter, DPMSolverMultistepScheduler
+from diffusers import MotionAdapter, EulerDiscreteScheduler # DPMSolverMultistepScheduler
 from diffusers.utils.torch_utils import randn_tensor
 
 from ..models import (HM3Denoising3D, HM3DenoisingMotion, HM3MotionAdapter,
@@ -40,11 +40,18 @@ class HM3VideoPipeline(HMPipeline):
 
         if modelscope:
             from modelscope import snapshot_download
-            hm_animatediff_dir = snapshot_download('songkey/hm3_animatediff')
+            if version == 'v3':
+                hm_animatediff_dir = snapshot_download('songkey/hm3_animatediff')
+            else:
+                hm_animatediff_dir = snapshot_download('songkey/hm4_animatediff')
         else:
-            hm_animatediff_dir = 'songkey/hm3_animatediff'
+            if version == 'v3':
+                hm_animatediff_dir = 'songkey/hm3_animatediff'
+            else:
+                hm_animatediff_dir = 'songkey/hm4_animatediff'
 
         self.num_frames = 12
+
         adapter = MotionAdapter.from_pretrained(hm_animatediff_dir, torch_dtype=torch.float16)
 
         unet = HM3DenoisingMotion.from_unet2d(unet=self.unet, motion_adapter=adapter, load_weights=True)
@@ -83,7 +90,7 @@ class HM3VideoPipeline(HMPipeline):
                 hm_motion_dir = 'songkey/hm4_motion'
 
         hm_adapter = HM3ReferenceAdapter.from_pretrained(hm_reference_dir)
-        motion_adapter = HM3MotionAdapter.from_pretrained(hm_motion_dir)
+        motion_adapter = HM3MotionAdapter().from_pretrained(hm_motion_dir)
 
         if isinstance(self.unet, HM3DenoisingMotion):
             self.unet.insert_reference_adapter(hm_adapter)
@@ -156,12 +163,12 @@ class HM3VideoPipeline(HMPipeline):
             paded_indexes = copy.deepcopy(paded_indexes)
             margin_indexes = [indexes[0], indexes[-1]]
 
-            scheduler = DPMSolverMultistepScheduler(
+            scheduler = EulerDiscreteScheduler(
                 num_train_timesteps=1000,
                 beta_start=0.00085,
                 beta_end=0.012,
                 beta_schedule="scaled_linear",
-                algorithm_type="sde-dpmsolver++",
+                # algorithm_type="sde-dpmsolver++",
             )
 
             tmp_timesteps, _ = retrieve_timesteps(scheduler, step, device, timesteps, sigmas)
@@ -235,12 +242,12 @@ class HM3VideoPipeline(HMPipeline):
             self.gen_video(margin_indexes, pad_dict, base_noise, depth+1, control_dict, step, more_params)
 
         ## generate latent
-        scheduler = DPMSolverMultistepScheduler(
+        scheduler = EulerDiscreteScheduler(
             num_train_timesteps=1000,
             beta_start=0.00085,
             beta_end=0.012,
             beta_schedule="scaled_linear",
-            algorithm_type="sde-dpmsolver++",
+            # algorithm_type="sde-dpmsolver++",
         )
         timesteps, _ = retrieve_timesteps(scheduler, step, device, timesteps, sigmas)
 
