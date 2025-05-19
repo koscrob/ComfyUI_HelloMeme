@@ -47,7 +47,6 @@ from .hellomeme.utils import (get_drive_expression,
                               get_drive_expression_pd_fgc,
                               gen_control_heatmaps,
                               get_drive_pose,
-                              crop_and_resize,
                               det_landmarks,
                               get_torch_device,
                               append_pipline_weights,
@@ -147,11 +146,11 @@ class HMImagePipelineLoader:
         else:
             pipeline = HMImagePipeline.from_pretrained(sd1_5_dir)
         pipeline.to(dtype=dtype)
-        pipeline.caryomitosis(version=version, modelscope=deployment=='modelscope')
+        pipeline.caryomitosis(version=version, modelscope=deployment == 'modelscope')
 
         format_model_path(pipeline, MODEL_CONFIG, checkpoint, vae, lora, stylize, lora_scale, deployment)
 
-        pipeline.insert_hm_modules(version=version, dtype=dtype, modelscope=deployment=='modelscope')
+        pipeline.insert_hm_modules(version=version, dtype=dtype, modelscope=deployment == 'modelscope')
         
         return (pipeline, )
 
@@ -222,42 +221,6 @@ class HMFaceToolkitsLoader:
         return (face_toolkits, )
 
 
-class CropPortrait:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "image": ("IMAGE",),
-                "face_toolkits": ("FACE_TOOLKITS",),
-            }
-        }
-
-    RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "crop_portrait"
-    CATEGORY = "hellomeme"
-
-    def crop_portrait(self, image, face_toolkits):
-        image_np = cv2.cvtColor((image[0] * 255).cpu().numpy().astype(np.uint8), cv2.COLOR_BGR2RGB)
-
-        if min(image_np.shape[:2]) < 512:
-            raise Exception(f'Image size is too small -> min{image_np.shape[:2]} < 512')
-
-        face_toolkits['face_aligner'].reset_track()
-        faces = face_toolkits['face_aligner'].forward(image_np)
-        if len(faces) > 0:
-            face = sorted(faces, key=lambda x: (x['face_rect'][2] - x['face_rect'][0]) * (
-                    x['face_rect'][3] - x['face_rect'][1]))[-1]
-            ref_landmark = face['pre_kpt_222']
-
-            new_image, new_landmark = crop_and_resize(image_np[np.newaxis, :,:,:], ref_landmark[np.newaxis, :,:], 512, crop=True)
-            # for x, y in new_landmark[0]:
-            #     cv2.circle(new_image[0], (int(x), int(y)), 2, (0, 255, 0), -1)
-        else:
-            raise Exception('No face detected')
-        new_image = cv2.cvtColor(new_image[0], cv2.COLOR_RGB2BGR)
-        return (torch.from_numpy(new_image[np.newaxis, :,:,:]).float() / 255., )
-
-
 class GetFaceLandmarks:
     @classmethod
     def INPUT_TYPES(s):
@@ -276,16 +239,14 @@ class GetFaceLandmarks:
     def get_face_landmarks(self, face_toolkits, images):
         frame_list = [cv2.cvtColor((frame * 255).cpu().numpy().astype(np.uint8), cv2.COLOR_BGR2RGB) for frame in images]
         frame_num = len(frame_list)
-        if frame_num == 0:
-            raise Exception('No image detected')
+        assert frame_num > 0, 'No image detected'
         _, landmark_list = det_landmarks(face_toolkits['face_aligner'], frame_list)
-        if len(frame_list) != frame_num:
-            raise Exception('Not all images have face detected!')
+        assert len(frame_list) == frame_num, 'Not all images have face detected!'
 
         return (torch.from_numpy(landmark_list).float(), )
 
 
-class GetDrivePose:
+class GetHeadPose:
     @classmethod
     def INPUT_TYPES(s):
         return {
@@ -293,21 +254,22 @@ class GetDrivePose:
                 "face_toolkits": ("FACE_TOOLKITS",),
                 "images": ("IMAGE",),
                 "landmarks": ("FACELANDMARKS222",),
+                "crop": ("BOOLEAN", {"default": True, "label_on": "True", "label_off": "False"}),
             }
         }
-    RETURN_TYPES = ("DRIVE_POSE",)
-    RETURN_NAMES = ("drive_pose",)
-    FUNCTION = "get_drive_pose"
+    RETURN_TYPES = ("HEAD_POSE",)
+    RETURN_NAMES = ("head_pose",)
+    FUNCTION = "get_head_pose"
     CATEGORY = "hellomeme"
-    def get_drive_pose(self, face_toolkits, images, landmarks):
+    def get_head_pose(self, face_toolkits, images, landmarks, crop):
         frame_list = [cv2.cvtColor((frame * 255).cpu().numpy().astype(np.uint8), cv2.COLOR_BGR2RGB) for frame in images]
         landmarks = landmarks.cpu().numpy()
 
-        rot_list, trans_list = get_drive_pose(face_toolkits, frame_list, landmarks, save_size=512)
-        return (dict(rot=np.stack(rot_list), trans=np.stack(trans_list)), )
+        new_frames, new_landmarks, rot_list, trans_list = get_drive_pose(face_toolkits, frame_list, landmarks, save_size=512, crop=crop)
+        return (dict(rot=np.stack(rot_list), trans=np.stack(trans_list), frame=np.stack(new_frames), landmarks=np.stack(new_landmarks)), )
 
 
-class GetDriveExpression:
+class GetExpression:
     @classmethod
     def INPUT_TYPES(s):
         return {
@@ -317,18 +279,18 @@ class GetDriveExpression:
                 "landmarks": ("FACELANDMARKS222",),
             }
         }
-    RETURN_TYPES = ("DRIVE_EXPRESSION",)
-    RETURN_NAMES = ("drive_exp",)
-    FUNCTION = "get_drive_expression"
+    RETURN_TYPES = ("EXPRESSION",)
+    RETURN_NAMES = ("expression",)
+    FUNCTION = "get_expression"
     CATEGORY = "hellomeme"
-    def get_drive_expression(self, face_toolkits, images, landmarks):
+    def get_expression(self, face_toolkits, images, landmarks):
         frame_list = [cv2.cvtColor((frame * 255).cpu().numpy().astype(np.uint8), cv2.COLOR_BGR2RGB) for frame in images]
         landmarks = landmarks.cpu().numpy()
         exp_dict = get_drive_expression(face_toolkits, frame_list, landmarks)
         return (exp_dict, )
 
 
-class GetDriveExpression2:
+class GetExpression2:
     @classmethod
     def INPUT_TYPES(s):
         return {
@@ -338,11 +300,11 @@ class GetDriveExpression2:
                 "landmarks": ("FACELANDMARKS222",),
             }
         }
-    RETURN_TYPES = ("DRIVE_EXPRESSION2",)
-    RETURN_NAMES = ("drive_exp2",)
-    FUNCTION = "get_drive_expression"
+    RETURN_TYPES = ("EXPRESSION",)
+    RETURN_NAMES = ("expression",)
+    FUNCTION = "get_expression"
     CATEGORY = "hellomeme"
-    def get_drive_expression(self, face_toolkits, images, landmarks):
+    def get_expression(self, face_toolkits, images, landmarks):
         frame_list = [cv2.cvtColor((frame * 255).cpu().numpy().astype(np.uint8), cv2.COLOR_BGR2RGB) for frame in images]
         landmarks = landmarks.cpu().numpy()
         exp_dict = get_drive_expression_pd_fgc(face_toolkits, frame_list, landmarks)
@@ -355,9 +317,10 @@ class HMPipelineImage:
         return {
             "required": {
                 "hm_image_pipeline": ("HMIMAGEPIPELINE",),
-                "face_toolkits": ("FACE_TOOLKITS",),
-                "ref_image": ("IMAGE",),
-                "drive_pose": ("DRIVE_POSE",),
+                "ref_head_pose": ("HEAD_POSE",),
+                "ref_expression": ("EXPRESSION",),
+                "drive_head_pose": ("HEAD_POSE",),
+                "drive_expression": ("EXPRESSION",),
                 "trans_ratio": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1}),
                 "prompt": ("STRING", {"default": DEFAULT_PROMPT}),
                 "negative_prompt": ("STRING", {"default": ''}),
@@ -368,10 +331,6 @@ class HMPipelineImage:
                 "guidance_scale": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 100.0, "step": 0.1}),
                 "gpu_id": ("INT", {"default": 0, "min": -1, "max": 16}, ),
             },
-                "optional": {
-                    "drive_exp": ("DRIVE_EXPRESSION", {"default": None},),
-                    "drive_exp2": ("DRIVE_EXPRESSION2", {"default": None},),
-                }
         }
 
     RETURN_TYPES = ("IMAGE", "LATENT", )
@@ -379,47 +338,30 @@ class HMPipelineImage:
     CATEGORY = "hellomeme"
 
     def sample(self,
-               hm_image_pipeline,
-               face_toolkits,
-               ref_image,
-               drive_pose,
-               drive_exp=None,
-               drive_exp2=None,
-               trans_ratio='0.0',
-               prompt=DEFAULT_PROMPT,
-               negative_prompt='',
-               steps=25,
-               seed=0,
-               guidance_scale=2.0,
-               gpu_id=0
+                hm_image_pipeline,
+                ref_head_pose,
+                ref_expression,
+                drive_head_pose,
+                drive_expression,
+                trans_ratio='0.0',
+                prompt=DEFAULT_PROMPT,
+                negative_prompt='',
+                steps=25,
+                seed=0,
+                guidance_scale=2.0,
+                gpu_id=0
                ):
         device = get_torch_device(gpu_id)
 
-        image_np = (ref_image[0] * 255).cpu().numpy().astype(np.uint8)
-        if min(image_np.shape[:2]) < 512:
-            raise Exception(f'Reference image size is too small -> min{image_np.shape[:2]} < 512')
-
-        image_np = cv2.resize(image_np, (512, 512))
+        image_np = cv2.cvtColor(ref_head_pose['frame'][0], cv2.COLOR_BGR2RGB)
         image_pil = Image.fromarray(image_np)
 
-        face_toolkits['face_aligner'].reset_track()
-        faces = face_toolkits['face_aligner'].forward(image_np)
-        if len(faces) == 0: raise Exception('No face detected')
+        ref_trans = ref_head_pose['trans'][0]
 
-        face = sorted(faces, key=lambda x: (x['face_rect'][2] - x['face_rect'][0]) * (
-                x['face_rect'][3] - x['face_rect'][1]))[-1]
-        ref_landmark = face['pre_kpt_222']
-
-        _, ref_trans = face_toolkits['h3dmm'].forward_params(image_np, ref_landmark)
-
-        drive_rot, drive_trans = drive_pose['rot'], drive_pose['trans']
+        drive_rot, drive_trans = drive_head_pose['rot'], drive_head_pose['trans']
         condition = gen_control_heatmaps(drive_rot, drive_trans, ref_trans, 512, trans_ratio)
         drive_params = dict(condition=condition.unsqueeze(0).to(dtype=torch.float16, device='cpu'))
-
-        if isinstance(drive_exp, dict):
-            drive_params.update(drive_exp)
-        if isinstance(drive_exp2, dict):
-            drive_params.update(drive_exp2)
+        drive_params.update(drive_expression)
 
         generator = torch.Generator().manual_seed(seed)
 
@@ -444,9 +386,10 @@ class HMPipelineVideo:
         return {
                     "required":{
                         "hm_video_pipeline": ("HMVIDEOPIPELINE",),
-                        "face_toolkits": ("FACE_TOOLKITS",),
-                        "ref_image": ("IMAGE",),
-                        "drive_pose": ("DRIVE_POSE",),
+                        "ref_head_pose": ("HEAD_POSE",),
+                        "ref_expression": ("EXPRESSION",),
+                        "drive_head_pose": ("HEAD_POSE",),
+                        "drive_expression": ("EXPRESSION",),
                         "trans_ratio": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1}),
                         "patch_overlap": ("INT", {"default": 4, "min": 0, "max": 5}),
                         "prompt": ("STRING", {"default": DEFAULT_PROMPT}),
@@ -458,10 +401,6 @@ class HMPipelineVideo:
                         "guidance_scale": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 100.0, "step": 0.1}),
                         "gpu_id": ("INT", {"default": 0, "min": -1, "max": 16}, ),
                      },
-                    "optional": {
-                        "drive_exp": ("DRIVE_EXPRESSION", {"default": None},),
-                        "drive_exp2": ("DRIVE_EXPRESSION2", {"default": None},),
-                    }
                 }
 
     RETURN_TYPES = ("IMAGE", "LATENT", )
@@ -470,11 +409,10 @@ class HMPipelineVideo:
 
     def sample(self,
                 hm_video_pipeline,
-                face_toolkits,
-                ref_image,
-                drive_pose,
-                drive_exp=None,
-                drive_exp2=None,
+                ref_head_pose,
+                ref_expression,
+                drive_head_pose,
+                drive_expression,
                 trans_ratio=0.0,
                 patch_overlap=4,
                 prompt=DEFAULT_PROMPT,
@@ -486,40 +424,26 @@ class HMPipelineVideo:
         ):
         device = get_torch_device(gpu_id)
 
-        image_np = (ref_image[0] * 255).cpu().numpy().astype(np.uint8)
-        if min(image_np.shape[:2]) < 512:
-            raise Exception(f'Reference image size is too small -> min{image_np.shape[:2]} < 512')
-
-        image_np = cv2.resize(image_np, (512, 512))
+        image_np = cv2.cvtColor(ref_head_pose['frame'][0], cv2.COLOR_BGR2RGB)
         image_pil = Image.fromarray(image_np)
 
-        face_toolkits['face_aligner'].reset_track()
-        faces = face_toolkits['face_aligner'].forward(image_np)
-        face_toolkits['face_aligner'].reset_track()
-        if len(faces) == 0: raise Exception('No face detected')
-
-        face = sorted(faces, key=lambda x: (x['face_rect'][2] - x['face_rect'][0]) * (
-                x['face_rect'][3] - x['face_rect'][1]))[-1]
-        ref_landmark = face['pre_kpt_222']
-
-        _, ref_trans = face_toolkits['h3dmm'].forward_params(image_np, ref_landmark)
-
+        ref_rot, ref_trans = ref_head_pose['rot'], ref_head_pose['trans']
         generator = torch.Generator().manual_seed(seed)
 
-        drive_rot, drive_trans = drive_pose['rot'], drive_pose['trans']
-        condition = gen_control_heatmaps(drive_rot, drive_trans, ref_trans, 512, trans_ratio)
+        drive_rot, drive_trans = drive_head_pose['rot'], drive_head_pose['trans']
+        condition = gen_control_heatmaps(drive_rot, drive_trans, ref_trans[0], 512, trans_ratio)
+        ref_condition = gen_control_heatmaps(ref_rot, ref_trans, ref_trans[0], 512, 0.0)
         drive_params = dict(condition=condition.unsqueeze(0).to(dtype=torch.float16, device='cpu'))
-
-        if isinstance(drive_exp, dict):
-            drive_params.update(drive_exp)
-        if isinstance(drive_exp2, dict):
-            drive_params.update(drive_exp2)
+        ref_params = dict(condition=ref_condition.unsqueeze(0).to(dtype=torch.float16, device='cpu'))
+        drive_params.update(drive_expression)
+        ref_params.update(ref_expression)
 
         res_frames, latents = hm_video_pipeline(
             prompt=[prompt],
             strength=1.0,
             image=image_pil,
             chunk_overlap=patch_overlap,
+            ref_params=ref_params,
             drive_params=drive_params,
             num_inference_steps=steps,
             negative_prompt=[negative_prompt],
@@ -540,11 +464,10 @@ NODE_CLASS_MAPPINGS = {
     "HMFaceToolkitsLoader": HMFaceToolkitsLoader,
     "HMPipelineImage": HMPipelineImage,
     "HMPipelineVideo": HMPipelineVideo,
-    "CropPortrait": CropPortrait,
     "GetFaceLandmarks": GetFaceLandmarks,
-    "GetDrivePose": GetDrivePose,
-    "GetDriveExpression": GetDriveExpression,
-    "GetDriveExpression2": GetDriveExpression2,
+    "GetHeadPose": GetHeadPose,
+    "GetExpression": GetExpression,
+    "GetExpression2": GetExpression2,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -553,9 +476,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "HMFaceToolkitsLoader": "Load Face Toolkits",
     "HMPipelineImage": "HelloMeme Image Pipeline",
     "HMPipelineVideo": "HelloMeme Video Pipeline",
-    "CropPortrait": "Crop Portrait",
     "GetFaceLandmarks": "Get Face Landmarks",
-    "GetDrivePose": "Get Drive Pose",
-    "GetDriveExpression": "Get Drive Expression",
-    "GetDriveExpression2": "Get Drive Expression V2",
+    "GetHeadPose": "Get Head Pose",
+    "GetExpression": "Get Face Expression",
+    "GetExpression2": "Get Face Expression V2",
 }
