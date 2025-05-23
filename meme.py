@@ -52,7 +52,9 @@ from .hellomeme.utils import (get_drive_expression,
                               append_pipline_weights,
                               load_face_toolkits
                               )
-from .hellomeme import HMImagePipeline, HMVideoPipeline, HM3ImagePipeline, HM3VideoPipeline
+from .hellomeme import (HMImagePipeline, HMVideoPipeline,
+                        HM3ImagePipeline, HM3VideoPipeline,
+                        HM5ImagePipeline)
 
 config_path = osp.join(cur_dir, 'hellomeme', 'model_config.json')
 with open(config_path, 'r') as f:
@@ -123,7 +125,7 @@ class HMImagePipelineLoader:
                 "checkpoint": (checkpoint_files, ),
                 "lora": (lora_files, ),
                 "vae": (vae_files, ),
-                "version": (['v1', 'v2', 'v3', 'v4'], ),
+                "version": (['v1', 'v2', 'v3', 'v4', 'v5'], ),
                 "stylize": (['x1', 'x2'], ),
                 "deployment": (['huggingface', 'modelscope'], ),
                 "lora_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1}),
@@ -143,6 +145,8 @@ class HMImagePipelineLoader:
             sd1_5_dir = "songkey/stable-diffusion-v1-5"
         if version == 'v3' or version == 'v4':
             pipeline = HM3ImagePipeline.from_pretrained(sd1_5_dir)
+        elif version == 'v5':
+            pipeline = HM5ImagePipeline.from_pretrained(sd1_5_dir)
         else:
             pipeline = HMImagePipeline.from_pretrained(sd1_5_dir)
         pipeline.to(dtype=dtype)
