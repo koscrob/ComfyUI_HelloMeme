@@ -20,10 +20,10 @@ from diffusers.utils.torch_utils import randn_tensor
 from diffusers.pipelines.stable_diffusion.pipeline_output import StableDiffusionPipelineOutput
 from diffusers import DPMSolverMultistepScheduler
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_timesteps, retrieve_latents
-from custom_nodes.ComfyUI_HelloMeme.hellomeme.models import (HM3Denoising3D,
-                                                             HMPipeline, HM5ReferenceAdapter,
-                                                             HM5ControlNetBase,
-                                                             HM5SD15ControlProj)
+from ..models import (HM3Denoising3D,
+                     HMPipeline, HM5ReferenceAdapter,
+                     HM5ControlNetBase,
+                     HM5SD15ControlProj)
 
 class HM5ImagePipeline(HMPipeline):
     def caryomitosis(self, **kwargs):
