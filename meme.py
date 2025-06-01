@@ -1,9 +1,7 @@
 import json
 import os
 import os.path as osp
-import random
 import sys
-import subprocess
 import importlib.metadata
 
 cur_dir = osp.dirname(osp.abspath(__file__))
@@ -11,7 +9,7 @@ cur_dir = osp.dirname(osp.abspath(__file__))
 installed_packages = [package.name for package in importlib.metadata.distributions()]
 
 REQUIRED = {
-    'diffusers':'0.31.0', 'transformers':'4.46.3', 'einops':'0.8.0', 'opencv-python':'4.10.0.84', 'tqdm':'4.67.0',
+    'diffusers':'0.33.1', 'transformers':'4.46.3', 'einops':'0.8.0', 'opencv-python':'4.10.0.84', 'tqdm':'4.67.0',
     'pillow':'10.2.0', 'onnxruntime-gpu':'1.18.1', 'onnx':'1.17.0', 'safetensors':'0.4.5',
     'accelerate':'1.1.1', 'peft':'0.13.2', 'modelscope':'', 'huggingface-hub':''
 }
@@ -54,7 +52,7 @@ from .hellomeme.utils import (get_drive_expression,
                               )
 from .hellomeme import (HMImagePipeline, HMVideoPipeline,
                         HM3ImagePipeline, HM3VideoPipeline,
-                        HM5ImagePipeline)
+                        HM5ImagePipeline, HM5VideoPipeline)
 
 config_path = osp.join(cur_dir, 'hellomeme', 'model_config.json')
 with open(config_path, 'r') as f:
@@ -169,7 +167,7 @@ class HMVideoPipelineLoader:
                 "checkpoint": (checkpoint_files, ),
                 "lora": (lora_files, ),
                 "vae": (vae_files, ),
-                "version": (['v1', 'v2', 'v3', 'v4'], ),
+                "version": (['v1', 'v2', 'v3', 'v4', 'v5'], ),
                 "stylize": (['x1', 'x2'], ),
                 "deployment": (['huggingface', 'modelscope'], ),
                 "lora_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1}),
@@ -192,6 +190,8 @@ class HMVideoPipelineLoader:
 
         if version == 'v3' or version == 'v4':
             pipeline = HM3VideoPipeline.from_pretrained(sd1_5_dir)
+        elif version == 'v5':
+            pipeline = HM5VideoPipeline.from_pretrained(sd1_5_dir)
         else:
             pipeline = HMVideoPipeline.from_pretrained(sd1_5_dir)
         pipeline.to(dtype=dtype)
