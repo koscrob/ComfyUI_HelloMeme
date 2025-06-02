@@ -15,7 +15,7 @@
     },
     "class_type": "LoadImage",
     "_meta": {
-      "title": "Load Image"
+      "title": "加载图像"
     }
   },
   "60": {
@@ -41,7 +41,7 @@
         0
       ],
       "images": [
-        "79",
+        "77",
         0
       ]
     },
@@ -79,7 +79,7 @@
         0
       ],
       "images": [
-        "79",
+        "77",
         0
       ],
       "landmarks": [
@@ -92,78 +92,7 @@
       "title": "Get Head Pose"
     }
   },
-  "79": {
-    "inputs": {
-      "image": "ysll.jpg"
-    },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "Load Image"
-    }
-  },
-  "80": {
-    "inputs": {
-      "trans_ratio": 0,
-      "prompt": "(best quality), highly detailed, ultra-detailed, headshot, person, well-placed five sense organs, looking at the viewer, centered composition, sharp focus, realistic skin texture",
-      "negative_prompt": "",
-      "steps": 25,
-      "seed": 452553676269313,
-      "guidance_scale": 2,
-      "gpu_id": 0,
-      "hm_image_pipeline": [
-        "82",
-        0
-      ],
-      "ref_head_pose": [
-        "67",
-        0
-      ],
-      "ref_expression": [
-        "84",
-        0
-      ],
-      "drive_head_pose": [
-        "69",
-        0
-      ],
-      "drive_expression": [
-        "85",
-        0
-      ]
-    },
-    "class_type": "HMPipelineImage",
-    "_meta": {
-      "title": "HelloMeme Image Pipeline"
-    }
-  },
-  "82": {
-    "inputs": {
-      "checkpoint": "[preset]DisneyPixarCartoonB",
-      "lora": "None",
-      "vae": "same as checkpoint",
-      "version": "v5",
-      "stylize": "x1",
-      "deployment": "huggingface",
-      "lora_scale": 1
-    },
-    "class_type": "HMImagePipelineLoader",
-    "_meta": {
-      "title": "Load HelloMemeImage Pipeline"
-    }
-  },
-  "83": {
-    "inputs": {
-      "images": [
-        "80",
-        0
-      ]
-    },
-    "class_type": "PreviewImage",
-    "_meta": {
-      "title": "Preview Image"
-    }
-  },
-  "84": {
+  "75": {
     "inputs": {
       "face_toolkits": [
         "2",
@@ -183,14 +112,14 @@
       "title": "Get Face Expression V2"
     }
   },
-  "85": {
+  "76": {
     "inputs": {
       "face_toolkits": [
         "2",
         0
       ],
       "images": [
-        "79",
+        "77",
         0
       ],
       "landmarks": [
@@ -201,6 +130,77 @@
     "class_type": "GetExpression2",
     "_meta": {
       "title": "Get Face Expression V2"
+    }
+  },
+  "77": {
+    "inputs": {
+      "image": "yao.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "78": {
+    "inputs": {
+      "checkpoint": "[preset]DisneyPixarCartoonB",
+      "lora": "None",
+      "vae": "same as checkpoint",
+      "version": "v5",
+      "stylize": "x1",
+      "deployment": "huggingface",
+      "lora_scale": 1
+    },
+    "class_type": "HMImagePipelineLoader",
+    "_meta": {
+      "title": "Load HelloMemeImage Pipeline"
+    }
+  },
+  "79": {
+    "inputs": {
+      "trans_ratio": 0,
+      "prompt": "(best quality), highly detailed, ultra-detailed, headshot, person, well-placed five sense organs, looking at the viewer, centered composition, sharp focus, realistic skin texture",
+      "negative_prompt": "",
+      "steps": 25,
+      "seed": 815482659530374,
+      "guidance_scale": 2,
+      "gpu_id": 0,
+      "hm_image_pipeline": [
+        "78",
+        0
+      ],
+      "ref_head_pose": [
+        "67",
+        0
+      ],
+      "ref_expression": [
+        "75",
+        0
+      ],
+      "drive_head_pose": [
+        "69",
+        0
+      ],
+      "drive_expression": [
+        "76",
+        0
+      ]
+    },
+    "class_type": "HMPipelineImage",
+    "_meta": {
+      "title": "HelloMeme Image Pipeline"
+    }
+  },
+  "80": {
+    "inputs": {
+      "images": [
+        "79",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "预览图像"
     }
   }
 }
