@@ -123,10 +123,11 @@ class HMImagePipelineLoader:
                 "checkpoint": (checkpoint_files, ),
                 "lora": (lora_files, ),
                 "vae": (vae_files, ),
-                "version": (['v1', 'v2', 'v3', 'v4', 'v5'], ),
+                "version": (['v5', 'v4', 'v3', 'v2', 'v1'], ),
                 "stylize": (['x1', 'x2'], ),
                 "deployment": (['huggingface', 'modelscope'], ),
                 "lora_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1}),
+                "dtype": (['fp32', 'fp16'], ),
             }
         }
     RETURN_TYPES = ("HMIMAGEPIPELINE", )
@@ -134,8 +135,8 @@ class HMImagePipelineLoader:
     FUNCTION = "load_pipeline"
     CATEGORY = "hellomeme"
     def load_pipeline(self, checkpoint=None, lora=None, vae=None,
-                      version='v2', stylize='x1', deployment='huggingface', lora_scale=1.0):
-        dtype = torch.float16
+                      version='v2', stylize='x1', deployment='huggingface', lora_scale=1.0, dtype='fp32'):
+        dtype = torch.float32 if dtype == 'fp32' else torch.float16
         if deployment == 'modelscope':
             from modelscope import snapshot_download
             sd1_5_dir = snapshot_download('songkey/stable-diffusion-v1-5')
@@ -167,10 +168,11 @@ class HMVideoPipelineLoader:
                 "checkpoint": (checkpoint_files, ),
                 "lora": (lora_files, ),
                 "vae": (vae_files, ),
-                "version": (['v1', 'v2', 'v3', 'v4', 'v5'], ),
+                "version": (['v5', 'v4', 'v3', 'v2', 'v1'], ),
                 "stylize": (['x1', 'x2'], ),
                 "deployment": (['huggingface', 'modelscope'], ),
                 "lora_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1}),
+                "dtype": (['fp32', 'fp16'], ),
             }
         }
 
@@ -180,8 +182,8 @@ class HMVideoPipelineLoader:
     CATEGORY = "hellomeme"
 
     def load_pipeline(self, checkpoint=None, lora=None, vae=None,
-                      version='v2', stylize='x1', deployment='huggingface', lora_scale=1.0):
-        dtype = torch.float16
+                      version='v2', stylize='x1', deployment='huggingface', lora_scale=1.0, dtype='fp32'):
+        dtype = torch.float32 if dtype == 'fp32' else torch.float16
         if deployment == 'modelscope':
             from modelscope import snapshot_download
             sd1_5_dir = snapshot_download('songkey/stable-diffusion-v1-5')
@@ -220,7 +222,7 @@ class HMFaceToolkitsLoader:
     CATEGORY = "hellomeme"
 
     def load_face_toolkits(self, gpu_id, deployment='huggingface'):
-        dtype = torch.float16
+        dtype = torch.float32
         face_toolkits = load_face_toolkits(dtype=dtype, gpu_id=gpu_id, modelscope=deployment=='modelscope')
         return (face_toolkits, )
 
@@ -356,6 +358,7 @@ class HMPipelineImage:
                 gpu_id=0
                ):
         device = get_torch_device(gpu_id)
+        dtype = hm_image_pipeline.dtype
 
         image_np = cv2.cvtColor(ref_head_pose['frame'][0], cv2.COLOR_BGR2RGB)
         image_pil = Image.fromarray(image_np)
@@ -364,8 +367,10 @@ class HMPipelineImage:
 
         drive_rot, drive_trans = drive_head_pose['rot'], drive_head_pose['trans']
         condition = gen_control_heatmaps(drive_rot, drive_trans, ref_trans, 512, trans_ratio)
-        drive_params = dict(condition=condition.unsqueeze(0).to(dtype=torch.float16, device='cpu'))
+        drive_params = dict(condition=condition.unsqueeze(0))
         drive_params.update(drive_expression)
+        for k, v in drive_params.items():
+            drive_params[k] = v.to(dtype=dtype, device='cpu')
 
         generator = torch.Generator().manual_seed(seed)
 
@@ -427,6 +432,7 @@ class HMPipelineVideo:
                 gpu_id=0
         ):
         device = get_torch_device(gpu_id)
+        dtype = hm_video_pipeline.dtype
 
         image_np = cv2.cvtColor(ref_head_pose['frame'][0], cv2.COLOR_BGR2RGB)
         image_pil = Image.fromarray(image_np)
@@ -437,10 +443,15 @@ class HMPipelineVideo:
         drive_rot, drive_trans = drive_head_pose['rot'], drive_head_pose['trans']
         condition = gen_control_heatmaps(drive_rot, drive_trans, ref_trans[0], 512, trans_ratio)
         ref_condition = gen_control_heatmaps(ref_rot, ref_trans, ref_trans[0], 512, 0.0)
-        drive_params = dict(condition=condition.unsqueeze(0).to(dtype=torch.float16, device='cpu'))
-        ref_params = dict(condition=ref_condition.unsqueeze(0).to(dtype=torch.float16, device='cpu'))
+        drive_params = dict(condition=condition.unsqueeze(0))
+        ref_params = dict(condition=ref_condition.unsqueeze(0))
         drive_params.update(drive_expression)
         ref_params.update(ref_expression)
+
+        for k, v in drive_params.items():
+            drive_params[k] = v.to(dtype=dtype)
+        for k, v in ref_params.items():
+            ref_params[k] = v.to(dtype=dtype, device='cpu')
 
         res_frames, latents = hm_video_pipeline(
             prompt=[prompt],

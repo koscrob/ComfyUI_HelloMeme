@@ -405,44 +405,6 @@
       ]
     },
     {
-      "id": 57,
-      "type": "HMVideoPipelineLoader",
-      "pos": [
-        798.4796752929688,
-        193.7666015625
-      ],
-      "size": [
-        352.79998779296875,
-        202
-      ],
-      "flags": {},
-      "order": 1,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "hm_video_pipeline",
-          "type": "HMVIDEOPIPELINE",
-          "slot_index": 0,
-          "links": [
-            165
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "HMVideoPipelineLoader"
-      },
-      "widgets_values": [
-        "[preset]RealisticVisionV60B1",
-        "None",
-        "same as checkpoint",
-        "v5",
-        "x1",
-        "huggingface",
-        1
-      ]
-    },
-    {
       "id": 48,
       "type": "VHS_LoadVideo",
       "pos": [
@@ -451,10 +413,10 @@
       ],
       "size": [
         247.455078125,
-        503.455078125
+        262
       ],
       "flags": {},
-      "order": 2,
+      "order": 1,
       "mode": 0,
       "inputs": [
         {
@@ -541,7 +503,7 @@
         314
       ],
       "flags": {},
-      "order": 3,
+      "order": 2,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -614,6 +576,45 @@
       },
       "widgets_values": [
         true
+      ]
+    },
+    {
+      "id": 57,
+      "type": "HMVideoPipelineLoader",
+      "pos": [
+        798.4796752929688,
+        193.7666015625
+      ],
+      "size": [
+        352.79998779296875,
+        226
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "hm_video_pipeline",
+          "type": "HMVIDEOPIPELINE",
+          "slot_index": 0,
+          "links": [
+            165
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HMVideoPipelineLoader"
+      },
+      "widgets_values": [
+        "[preset]RealisticVisionV60B1",
+        "None",
+        "same as checkpoint",
+        "v5",
+        "x1",
+        "huggingface",
+        1,
+        "fp32"
       ]
     }
   ],
