@@ -264,7 +264,7 @@
         "Node name for S&R": "VHS_VideoCombine"
       },
       "widgets_values": {
-        "frame_rate": 15,
+        "frame_rate": 8,
         "loop_count": 0,
         "filename_prefix": "AnimateDiff",
         "format": "video/h264-mp4",
@@ -281,7 +281,7 @@
             "subfolder": "",
             "type": "output",
             "format": "video/h264-mp4",
-            "frame_rate": 15
+            "frame_rate": 8
           },
           "muted": false
         }
@@ -467,7 +467,7 @@
       },
       "widgets_values": {
         "video": "jgz.mp4",
-        "force_rate": 15,
+        "force_rate": 8,
         "force_size": "Disabled",
         "custom_width": 512,
         "custom_height": 512,
@@ -479,7 +479,7 @@
           "hidden": false,
           "paused": false,
           "params": {
-            "force_rate": 15,
+            "force_rate": 8,
             "frame_load_cap": 0,
             "skip_first_frames": 0,
             "select_every_nth": 1,
