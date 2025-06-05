@@ -328,7 +328,7 @@ class HMPipelineImage:
                 "drive_head_pose": ("HEAD_POSE",),
                 "drive_expression": ("EXPRESSION",),
                 "trans_ratio": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1}),
-                "prompt": ("STRING", {"default": DEFAULT_PROMPT}),
+                "prompt": ("STRING", {"default": ''}),
                 "negative_prompt": ("STRING", {"default": ''}),
                 "steps": ("INT", {"default": 25, "min": 1, "max": 10000,
                                   "tooltip": "The number of steps used in the denoising process."}),
@@ -350,7 +350,7 @@ class HMPipelineImage:
                 drive_head_pose,
                 drive_expression,
                 trans_ratio='0.0',
-                prompt=DEFAULT_PROMPT,
+                prompt='',
                 negative_prompt='',
                 steps=25,
                 seed=0,
@@ -359,6 +359,8 @@ class HMPipelineImage:
                ):
         device = get_torch_device(gpu_id)
         dtype = hm_image_pipeline.dtype
+
+        prompt = DEFAULT_PROMPT if prompt == '' else prompt + ", " + DEFAULT_PROMPT
 
         image_np = cv2.cvtColor(ref_head_pose['frame'][0], cv2.COLOR_BGR2RGB)
         image_pil = Image.fromarray(image_np)
@@ -401,7 +403,7 @@ class HMPipelineVideo:
                         "drive_expression": ("EXPRESSION",),
                         "trans_ratio": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1}),
                         "patch_overlap": ("INT", {"default": 4, "min": 0, "max": 5}),
-                        "prompt": ("STRING", {"default": DEFAULT_PROMPT}),
+                        "prompt": ("STRING", {"default": ''}),
                         "negative_prompt": ("STRING", {"default": ''}),
                         "steps": ("INT", {"default": 25, "min": 1, "max": 10000,
                                           "tooltip": "The number of steps used in the denoising process."}),
@@ -424,7 +426,7 @@ class HMPipelineVideo:
                 drive_expression,
                 trans_ratio=0.0,
                 patch_overlap=4,
-                prompt=DEFAULT_PROMPT,
+                prompt='',
                 negative_prompt="",
                 steps=25,
                 seed=0,
@@ -433,6 +435,8 @@ class HMPipelineVideo:
         ):
         device = get_torch_device(gpu_id)
         dtype = hm_video_pipeline.dtype
+
+        prompt = DEFAULT_PROMPT if prompt == '' else prompt + ", " + DEFAULT_PROMPT
 
         image_np = cv2.cvtColor(ref_head_pose['frame'][0], cv2.COLOR_BGR2RGB)
         image_pil = Image.fromarray(image_np)
