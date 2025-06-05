@@ -53,22 +53,16 @@ This repository is the official implementation of the [`HelloMeme`](https://arxi
 > 
 > **Checkpoints** under: `ComfyUI/models/checkpoints`
 > 
-> **Loras** under: `ComfyUI/models/checkpoints`
+> **Loras** under: `ComfyUI/models/loras`
 
-## Recommended Third-party Checkpoints/Loras
-| Name | Checkpoints/Loras |
-|------|-------------------|
-| [realisticVisionV60B1_v51VAE](https://civitai.com/models/4201/realistic-vision-v60-b1) | Checkpoints       |
-| [disneyPixarCartoon_v10](https://civitai.com/models/65203/disney-pixar-cartoon-type-a) | Checkpoints             |
 
 ### Workflows
 
 | workflow file | Video Generation | Image Generation | HMControlNet | HMControlNet2 |
 |---------------|------------------|------------------|-----------|---------------|
-| hellomeme_image_workflow.json |                  | ✅                | ✅ |  |
-| hellomeme_video_workflow.json | ✅                |                  | ✅ |  |
-| hellomeme_image_v2_workflow.json |                  | ✅                |  | ✅ |
-| hellomeme_video_v2_workflow.json | ✅                |                  |  | ✅ |
+| image_generation.json |                  | ✅                |  | ✅ |
+| image_style_transfer.json |                  | ✅                |  | ✅ |
+| video_generation.json | ✅                |                  |  | ✅ |
 
 ### Image Generation Interface
 
