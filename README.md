@@ -55,6 +55,13 @@ This repository is the official implementation of the [`HelloMeme`](https://arxi
 > 
 > **Loras** under: `ComfyUI/models/loras`
 
+### Installation
+
+Keyword of ComfyUI Manager : `hellomeme-api`
+<p align="center">
+  <img src="examples/ComfyUI_Manager.jpg" alt="hellomeme-api">
+</p>
+
 
 ### Workflows
 
