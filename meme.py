@@ -59,6 +59,7 @@ with open(config_path, 'r') as f:
     MODEL_CONFIG = json.load(f)
 
 DEFAULT_PROMPT = MODEL_CONFIG['prompt']
+DEFAULT_PROMPT_NEW = MODEL_CONFIG['prompt_new']
 
 def get_models_files():
     checkpoint_files = folder_paths.get_filename_list("checkpoints")
@@ -123,7 +124,7 @@ class HMImagePipelineLoader:
                 "checkpoint": (checkpoint_files, ),
                 "lora": (lora_files, ),
                 "vae": (vae_files, ),
-                "version": (['v5', 'v4', 'v3', 'v2', 'v1'], ),
+                "version": (['v5b', 'v5', 'v4', 'v3', 'v2', 'v1'], ),
                 "stylize": (['x1', 'x2'], ),
                 "deployment": (['huggingface', 'modelscope'], ),
                 "lora_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1}),
@@ -144,7 +145,7 @@ class HMImagePipelineLoader:
             sd1_5_dir = "songkey/stable-diffusion-v1-5"
         if version == 'v3' or version == 'v4':
             pipeline = HM3ImagePipeline.from_pretrained(sd1_5_dir)
-        elif version == 'v5':
+        elif version == 'v5' or version == 'v5b':
             pipeline = HM5ImagePipeline.from_pretrained(sd1_5_dir)
         else:
             pipeline = HMImagePipeline.from_pretrained(sd1_5_dir)
@@ -360,7 +361,8 @@ class HMPipelineImage:
         device = get_torch_device(gpu_id)
         dtype = hm_image_pipeline.dtype
 
-        prompt = DEFAULT_PROMPT if prompt == '' else prompt + ", " + DEFAULT_PROMPT
+        PROMPT = DEFAULT_PROMPT_NEW if hm_image_pipeline.version == 'v5b' else DEFAULT_PROMPT
+        prompt = PROMPT if prompt == '' else prompt + ", " + PROMPT
 
         image_np = cv2.cvtColor(ref_head_pose['frame'][0], cv2.COLOR_BGR2RGB)
         image_pil = Image.fromarray(image_np)

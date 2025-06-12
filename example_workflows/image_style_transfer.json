@@ -1,47 +1,9 @@
 {
   "id": "a8e8ebf3-8dc8-4d76-ad73-dfe0b945cc77",
   "revision": 0,
-  "last_node_id": 80,
-  "last_link_id": 190,
+  "last_node_id": 86,
+  "last_link_id": 205,
   "nodes": [
-    {
-      "id": 2,
-      "type": "HMFaceToolkitsLoader",
-      "pos": [
-        45.41996383666992,
-        769.9866333007812
-      ],
-      "size": [
-        315,
-        82
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "face_toolkits",
-          "type": "FACE_TOOLKITS",
-          "slot_index": 0,
-          "links": [
-            122,
-            129,
-            147,
-            149,
-            173,
-            174
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "HMFaceToolkitsLoader"
-      },
-      "widgets_values": [
-        0,
-        "huggingface"
-      ]
-    },
     {
       "id": 61,
       "type": "GetFaceLandmarks",
@@ -79,6 +41,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui_hellomeme",
+        "ver": "56e8052c9b449621b029226988b0ed7d2dc96b4c",
         "Node name for S&R": "GetFaceLandmarks"
       },
       "widgets_values": []
@@ -120,6 +84,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui_hellomeme",
+        "ver": "56e8052c9b449621b029226988b0ed7d2dc96b4c",
         "Node name for S&R": "GetFaceLandmarks"
       },
       "widgets_values": []
@@ -165,6 +131,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui_hellomeme",
+        "ver": "56e8052c9b449621b029226988b0ed7d2dc96b4c",
         "Node name for S&R": "GetHeadPose"
       },
       "widgets_values": [
@@ -172,49 +140,46 @@
       ]
     },
     {
-      "id": 75,
-      "type": "GetExpression2",
+      "id": 2,
+      "type": "HMFaceToolkitsLoader",
       "pos": [
-        814.1359252929688,
-        689.6795654296875
+        45.41996383666992,
+        769.9866333007812
       ],
       "size": [
-        191.63729858398438,
-        66
+        315,
+        82
       ],
       "flags": {},
-      "order": 6,
+      "order": 0,
       "mode": 0,
-      "inputs": [
+      "inputs": [],
+      "outputs": [
         {
           "name": "face_toolkits",
           "type": "FACE_TOOLKITS",
-          "link": 173
-        },
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 175
-        },
-        {
-          "name": "landmarks",
-          "type": "FACELANDMARKS222",
-          "link": 178
-        }
-      ],
-      "outputs": [
-        {
-          "name": "expression",
-          "type": "EXPRESSION",
+          "slot_index": 0,
           "links": [
-            184
+            122,
+            129,
+            147,
+            149,
+            173,
+            174,
+            193,
+            194
           ]
         }
       ],
       "properties": {
-        "Node name for S&R": "GetExpression2"
+        "cnr_id": "comfyui_hellomeme",
+        "ver": "56e8052c9b449621b029226988b0ed7d2dc96b4c",
+        "Node name for S&R": "HMFaceToolkitsLoader"
       },
-      "widgets_values": []
+      "widgets_values": [
+        0,
+        "huggingface"
+      ]
     },
     {
       "id": 69,
@@ -252,11 +217,14 @@
           "name": "head_pose",
           "type": "HEAD_POSE",
           "links": [
-            185
+            185,
+            202
           ]
         }
       ],
       "properties": {
+        "cnr_id": "comfyui_hellomeme",
+        "ver": "56e8052c9b449621b029226988b0ed7d2dc96b4c",
         "Node name for S&R": "GetHeadPose"
       },
       "widgets_values": [
@@ -299,52 +267,17 @@
           "name": "expression",
           "type": "EXPRESSION",
           "links": [
-            186
+            186,
+            203
           ]
         }
       ],
       "properties": {
+        "cnr_id": "comfyui_hellomeme",
+        "ver": "56e8052c9b449621b029226988b0ed7d2dc96b4c",
         "Node name for S&R": "GetExpression2"
       },
       "widgets_values": []
-    },
-    {
-      "id": 78,
-      "type": "HMImagePipelineLoader",
-      "pos": [
-        797.7930297851562,
-        188.84007263183594
-      ],
-      "size": [
-        298.3472595214844,
-        226
-      ],
-      "flags": {},
-      "order": 1,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "hm_image_pipeline",
-          "type": "HMIMAGEPIPELINE",
-          "links": [
-            182
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "HMImagePipelineLoader"
-      },
-      "widgets_values": [
-        "[preset]DisneyPixarCartoonB",
-        "[preset]BabyFaceV1",
-        "same as checkpoint",
-        "v5",
-        "x1",
-        "huggingface",
-        1,
-        "fp32"
-      ]
     },
     {
       "id": 79,
@@ -392,7 +325,9 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            187
+            187,
+            191,
+            192
           ]
         },
         {
@@ -402,6 +337,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfyui_hellomeme",
+        "ver": "56e8052c9b449621b029226988b0ed7d2dc96b4c",
         "Node name for S&R": "HMPipelineImage"
       },
       "widgets_values": [
@@ -409,11 +346,278 @@
         "",
         "",
         25,
-        485743939425196,
+        778376016259914,
         "randomize",
-        1.5,
+        1.2000000000000002,
         0
       ]
+    },
+    {
+      "id": 80,
+      "type": "PreviewImage",
+      "pos": [
+        1706.34228515625,
+        92.85418701171875
+      ],
+      "size": [
+        426.67877197265625,
+        454.14093017578125
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 187
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.39",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 81,
+      "type": "GetFaceLandmarks",
+      "pos": [
+        1656.5469970703125,
+        756.1448364257812
+      ],
+      "size": [
+        170.62362670898438,
+        46
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "face_toolkits",
+          "type": "FACE_TOOLKITS",
+          "link": 193
+        },
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 191
+        }
+      ],
+      "outputs": [
+        {
+          "name": "landmarks",
+          "type": "FACELANDMARKS222",
+          "links": [
+            195
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_hellomeme",
+        "ver": "56e8052c9b449621b029226988b0ed7d2dc96b4c",
+        "Node name for S&R": "GetFaceLandmarks"
+      }
+    },
+    {
+      "id": 75,
+      "type": "GetExpression2",
+      "pos": [
+        814.1359252929688,
+        689.6795654296875
+      ],
+      "size": [
+        191.63729858398438,
+        66
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "face_toolkits",
+          "type": "FACE_TOOLKITS",
+          "link": 173
+        },
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 175
+        },
+        {
+          "name": "landmarks",
+          "type": "FACELANDMARKS222",
+          "link": 178
+        }
+      ],
+      "outputs": [
+        {
+          "name": "expression",
+          "type": "EXPRESSION",
+          "links": [
+            184,
+            205
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_hellomeme",
+        "ver": "56e8052c9b449621b029226988b0ed7d2dc96b4c",
+        "Node name for S&R": "GetExpression2"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 82,
+      "type": "GetHeadPose",
+      "pos": [
+        1887.2037353515625,
+        718.1502075195312
+      ],
+      "size": [
+        270,
+        98
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "face_toolkits",
+          "type": "FACE_TOOLKITS",
+          "link": 194
+        },
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 192
+        },
+        {
+          "name": "landmarks",
+          "type": "FACELANDMARKS222",
+          "link": 195
+        }
+      ],
+      "outputs": [
+        {
+          "name": "head_pose",
+          "type": "HEAD_POSE",
+          "links": [
+            200
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_hellomeme",
+        "ver": "56e8052c9b449621b029226988b0ed7d2dc96b4c",
+        "Node name for S&R": "GetHeadPose"
+      },
+      "widgets_values": [
+        false
+      ]
+    },
+    {
+      "id": 85,
+      "type": "HMPipelineImage",
+      "pos": [
+        2279.40625,
+        704.7041015625
+      ],
+      "size": [
+        270,
+        306
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "hm_image_pipeline",
+          "type": "HMIMAGEPIPELINE",
+          "link": 199
+        },
+        {
+          "name": "ref_head_pose",
+          "type": "HEAD_POSE",
+          "link": 200
+        },
+        {
+          "name": "ref_expression",
+          "type": "EXPRESSION",
+          "link": 205
+        },
+        {
+          "name": "drive_head_pose",
+          "type": "HEAD_POSE",
+          "link": 202
+        },
+        {
+          "name": "drive_expression",
+          "type": "EXPRESSION",
+          "link": 203
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            204
+          ]
+        },
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_hellomeme",
+        "ver": "56e8052c9b449621b029226988b0ed7d2dc96b4c",
+        "Node name for S&R": "HMPipelineImage"
+      },
+      "widgets_values": [
+        0,
+        "",
+        "",
+        25,
+        661833773290484,
+        "randomize",
+        1.2000000000000002,
+        0
+      ]
+    },
+    {
+      "id": 86,
+      "type": "PreviewImage",
+      "pos": [
+        2605.176025390625,
+        703.9863891601562
+      ],
+      "size": [
+        535.2344360351562,
+        631.5162963867188
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 204
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.39",
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
     },
     {
       "id": 58,
@@ -427,7 +631,7 @@
         314
       ],
       "flags": {},
-      "order": 2,
+      "order": 1,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -451,39 +655,55 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.39",
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "chillout.jpg",
+        "hinton1.jpg",
         "image"
       ]
     },
     {
-      "id": 80,
-      "type": "PreviewImage",
+      "id": 78,
+      "type": "HMImagePipelineLoader",
       "pos": [
-        1703.6793212890625,
-        613.1461791992188
+        797.7930297851562,
+        188.84007263183594
       ],
       "size": [
-        210,
-        258
+        298.3472595214844,
+        226
       ],
       "flags": {},
-      "order": 10,
+      "order": 2,
       "mode": 0,
-      "inputs": [
+      "inputs": [],
+      "outputs": [
         {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 187
+          "name": "hm_image_pipeline",
+          "type": "HMIMAGEPIPELINE",
+          "links": [
+            182,
+            199
+          ]
         }
       ],
-      "outputs": [],
       "properties": {
-        "Node name for S&R": "PreviewImage"
+        "cnr_id": "comfyui_hellomeme",
+        "ver": "56e8052c9b449621b029226988b0ed7d2dc96b4c",
+        "Node name for S&R": "HMImagePipelineLoader"
       },
-      "widgets_values": []
+      "widgets_values": [
+        "[preset]toonyou_beta6",
+        "[preset]Drawing",
+        "same as checkpoint",
+        "v5b",
+        "x1",
+        "huggingface",
+        1,
+        "fp32"
+      ]
     }
   ],
   "links": [
@@ -662,6 +882,94 @@
       76,
       1,
       "IMAGE"
+    ],
+    [
+      191,
+      79,
+      0,
+      81,
+      1,
+      "IMAGE"
+    ],
+    [
+      192,
+      79,
+      0,
+      82,
+      1,
+      "IMAGE"
+    ],
+    [
+      193,
+      2,
+      0,
+      81,
+      0,
+      "FACE_TOOLKITS"
+    ],
+    [
+      194,
+      2,
+      0,
+      82,
+      0,
+      "FACE_TOOLKITS"
+    ],
+    [
+      195,
+      81,
+      0,
+      82,
+      2,
+      "FACELANDMARKS222"
+    ],
+    [
+      199,
+      78,
+      0,
+      85,
+      0,
+      "HMIMAGEPIPELINE"
+    ],
+    [
+      200,
+      82,
+      0,
+      85,
+      1,
+      "HEAD_POSE"
+    ],
+    [
+      202,
+      69,
+      0,
+      85,
+      3,
+      "HEAD_POSE"
+    ],
+    [
+      203,
+      76,
+      0,
+      85,
+      4,
+      "EXPRESSION"
+    ],
+    [
+      204,
+      85,
+      0,
+      86,
+      0,
+      "IMAGE"
+    ],
+    [
+      205,
+      75,
+      0,
+      85,
+      2,
+      "EXPRESSION"
     ]
   ],
   "groups": [],
@@ -670,8 +978,8 @@
     "ds": {
       "scale": 0.8264462809917358,
       "offset": [
-        496.5037384564152,
-        -71.873413496035
+        148.58950276642736,
+        102.78195962059476
       ]
     },
     "frontendVersion": "1.19.2"
