@@ -26,7 +26,7 @@ if missing:
 try:
     from huggingface_hub import login
     # Model read permission
-    login(token='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')
+    login(token='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', new_session=False, write_permission=False)
 except:
     print("login error!")
 
