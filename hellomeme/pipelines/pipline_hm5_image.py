@@ -22,6 +22,9 @@ from diffusers import DPMSolverMultistepScheduler
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_timesteps, retrieve_latents
 from ..models import (HM3Denoising3D, HMPipeline, HM5ReferenceAdapter,
                       HM5bReferenceAdapter, HM5ControlNetBase, HM5SD15ControlProj)
+from ..tools.utils import creat_model_from_cloud
+
+
 
 class HM5ImagePipeline(HMPipeline):
     def caryomitosis(self, **kwargs):
@@ -45,27 +48,19 @@ class HM5ImagePipeline(HMPipeline):
 
     def insert_hm_modules(self, version='v5', dtype=torch.float16, modelscope=False):
         self.version = version
-        if modelscope:
-            from modelscope import snapshot_download
-            if version == 'v5b':
-                hm_reference_dir = snapshot_download('songkey/hm5b_reference')
-            else:
-                hm_reference_dir = snapshot_download('songkey/hm5_reference')
-            hm_control_dir = snapshot_download('songkey/hm5_control_base')
-            hm_control_proj_dir = snapshot_download('songkey/hm5_control_proj')
+
+        if version == 'v5b':
+            hm_reference_dir = 'songkey/hm5b_reference'
         else:
-            if version == 'v5b':
-                hm_reference_dir = 'songkey/hm5b_reference'
-            else:
-                hm_reference_dir = 'songkey/hm5_reference'
-            hm_control_dir = 'songkey/hm5_control_base'
-            hm_control_proj_dir = 'songkey/hm5_control_proj'
+            hm_reference_dir = 'songkey/hm5_reference'
+        hm_control_dir = 'songkey/hm5_control_base'
+        hm_control_proj_dir = 'songkey/hm5_control_proj'
 
         if isinstance(self.unet, HM3Denoising3D):
             if version == 'v5b':
-                hm_adapter = HM5bReferenceAdapter.from_pretrained(hm_reference_dir)
+                hm_adapter = creat_model_from_cloud(HM5bReferenceAdapter, hm_reference_dir, modelscope=modelscope)
             else:
-                hm_adapter = HM5ReferenceAdapter.from_pretrained(hm_reference_dir)
+                hm_adapter = creat_model_from_cloud(HM5ReferenceAdapter, hm_reference_dir, modelscope=modelscope)
 
             self.unet.insert_reference_adapter(hm_adapter)
             self.unet.to(device='cpu', dtype=dtype).eval()
@@ -79,8 +74,8 @@ class HM5ImagePipeline(HMPipeline):
         if hasattr(self, "mp_control_proj"):
             del self.mp_control_proj
 
-        self.mp_control = HM5ControlNetBase.from_pretrained(hm_control_dir)
-        self.mp_control_proj = HM5SD15ControlProj.from_pretrained(hm_control_proj_dir)
+        self.mp_control = creat_model_from_cloud(HM5ControlNetBase, hm_control_dir, modelscope=modelscope)
+        self.mp_control_proj = creat_model_from_cloud(HM5SD15ControlProj, hm_control_proj_dir, modelscope=modelscope)
 
         self.mp_control.to(device='cpu', dtype=dtype).eval()
         self.mp_control_proj.to(device='cpu', dtype=dtype).eval()

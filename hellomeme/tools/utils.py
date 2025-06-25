@@ -144,6 +144,7 @@ def creat_model_from_cloud(model_cls,
                             model_id,
                             modelscope=False,
                             cache_dir=None,
+                            subfolder=None,
                             hf_token='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'):
     if modelscope:
         from modelscope import snapshot_download
@@ -153,10 +154,10 @@ def creat_model_from_cloud(model_cls,
             print(e)
             assert False, "@@ Failed to download model from modelscope"
 
-        model = model_cls.from_pretrained(model_path)
+        model = model_cls.from_pretrained(model_path, subfolder=subfolder)
     else:
         try:
-            model = model_cls.from_pretrained(model_id, cache_dir=cache_dir, token=hf_token)
+            model = model_cls.from_pretrained(model_id, subfolder=subfolder, cache_dir=cache_dir, token=hf_token)
         except Exception as e:
             print(e)
             assert False, "@@ Failed to download model from huggingface hub"

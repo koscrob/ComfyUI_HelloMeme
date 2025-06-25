@@ -21,6 +21,8 @@ from diffusers.pipelines.stable_diffusion.pipeline_output import StableDiffusion
 from diffusers import DPMSolverMultistepScheduler
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_timesteps, retrieve_latents
 from ..models import HM3Denoising3D, HMV3ControlNet, HMPipeline, HM3ReferenceAdapter, HMControlNetBase, HM4SD15ControlProj
+from ..tools.utils import creat_model_from_cloud
+
 
 class HM3ImagePipeline(HMPipeline):
     def caryomitosis(self, **kwargs):
@@ -44,26 +46,17 @@ class HM3ImagePipeline(HMPipeline):
 
     def insert_hm_modules(self, version='v3', dtype=torch.float16, modelscope=False):
         self.version = version
-        if modelscope:
-            from modelscope import snapshot_download
-            if version == 'v3':
-                hm_reference_dir = snapshot_download('songkey/hm3_reference')
-                hm_control_dir = snapshot_download('songkey/hm3_control_mix')
-            else:
-                hm_reference_dir = snapshot_download('songkey/hm4_reference')
-                hm_control_dir = snapshot_download('songkey/hm_control_base')
-                hm_control_proj_dir = snapshot_download('songkey/hm4_control_proj')
+
+        if version == 'v3':
+            hm_reference_dir = 'songkey/hm3_reference'
+            hm_control_dir = 'songkey/hm3_control_mix'
         else:
-            if version == 'v3':
-                hm_reference_dir = 'songkey/hm3_reference'
-                hm_control_dir = 'songkey/hm3_control_mix'
-            else:
-                hm_reference_dir = 'songkey/hm4_reference'
-                hm_control_dir = 'songkey/hm_control_base'
-                hm_control_proj_dir = 'songkey/hm4_control_proj'
+            hm_reference_dir = 'songkey/hm4_reference'
+            hm_control_dir = 'songkey/hm_control_base'
+            hm_control_proj_dir = 'songkey/hm4_control_proj'
 
         if isinstance(self.unet, HM3Denoising3D):
-            hm_adapter = HM3ReferenceAdapter.from_pretrained(hm_reference_dir)
+            hm_adapter = creat_model_from_cloud(HM3ReferenceAdapter, hm_reference_dir, modelscope=modelscope)
             self.unet.insert_reference_adapter(hm_adapter)
             self.unet.to(device='cpu', dtype=dtype).eval()
 
@@ -77,10 +70,10 @@ class HM3ImagePipeline(HMPipeline):
             del self.mp_control_proj
 
         if version == 'v3':
-            self.mp_control = HMV3ControlNet.from_pretrained(hm_control_dir)
+            self.mp_control = creat_model_from_cloud(HMV3ControlNet, hm_control_dir, modelscope=modelscope)
         else:
-            self.mp_control = HMControlNetBase.from_pretrained(hm_control_dir)
-            self.mp_control_proj = HM4SD15ControlProj.from_pretrained(hm_control_proj_dir)
+            self.mp_control = creat_model_from_cloud(HMControlNetBase, hm_control_dir, modelscope=modelscope)
+            self.mp_control_proj = creat_model_from_cloud(HM4SD15ControlProj, hm_control_proj_dir, modelscope=modelscope)
 
             self.mp_control_proj.to(device='cpu', dtype=dtype).eval()
 
