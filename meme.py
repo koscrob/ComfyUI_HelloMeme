@@ -23,13 +23,6 @@ if missing:
     os.system(f'{sys.executable} -m pip install {missing_params}')
     # subprocess.check_call([python, '-m', 'pip', 'install', missing_params], stdout=subprocess.DEVNULL)
 
-try:
-    from huggingface_hub import login
-    # Model read permission
-    login(token='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', new_session=False, write_permission=False)
-except:
-    print("login error!")
-
 import numpy as np
 import cv2
 
@@ -52,7 +45,8 @@ from .hellomeme.utils import (get_drive_expression,
                               )
 from .hellomeme import (HMImagePipeline, HMVideoPipeline,
                         HM3ImagePipeline, HM3VideoPipeline,
-                        HM5ImagePipeline, HM5VideoPipeline)
+                        HM5ImagePipeline, HM5VideoPipeline,
+                        download_file_from_cloud)
 
 config_path = osp.join(cur_dir, 'hellomeme', 'model_config.json')
 with open(config_path, 'r') as f:
@@ -78,12 +72,7 @@ def get_models_files():
 def format_model_path(pipeline, config, checkpoint, vae, lora, stylize, lora_scale, deployment):
     if checkpoint and not checkpoint.startswith('SD1.5'):
         if checkpoint in config['sd15']['checkpoints']:
-            tmp_checkpoint_name = config['sd15']['checkpoints'][checkpoint]
-            if deployment == 'modelscope':
-                from modelscope import snapshot_download
-                checkpoint_path = snapshot_download(tmp_checkpoint_name)
-            else:
-                checkpoint_path = tmp_checkpoint_name
+            checkpoint_path = config['sd15']['checkpoints'][checkpoint]
         else:
             checkpoint_path = folder_paths.get_full_path_or_raise("checkpoints", checkpoint)
     else:
@@ -99,19 +88,14 @@ def format_model_path(pipeline, config, checkpoint, vae, lora, stylize, lora_sca
     if lora and not lora.startswith('None'):
         if lora in config['sd15']['loras']:
             tmp_lora_info = config['sd15']['loras'][lora]
-            if deployment == 'modelscope':
-                from modelscope import snapshot_download
-                lora_path = osp.join(snapshot_download(tmp_lora_info[0]), tmp_lora_info[1])
-            else:
-                from huggingface_hub import hf_hub_download
-                lora_path = hf_hub_download(tmp_lora_info[0], filename=tmp_lora_info[1])
+            lora_path = download_file_from_cloud(tmp_lora_info[0], tmp_lora_info[1], modelscope=deployment == 'modelscope')
         else:
             lora_path = folder_paths.get_full_path_or_raise("loras", lora)
     else:
         lora_path = lora
 
     append_pipline_weights(pipeline, checkpoint_path=checkpoint_path, lora_path=lora_path, vae_path=vae_path,
-                           stylize=stylize, lora_scale=lora_scale)
+                           stylize=stylize, lora_scale=lora_scale, modelscope=deployment == 'modelscope')
 
 
 class HMImagePipelineLoader:
@@ -169,7 +153,7 @@ class HMVideoPipelineLoader:
                 "checkpoint": (checkpoint_files, ),
                 "lora": (lora_files, ),
                 "vae": (vae_files, ),
-                "version": (['v5', 'v4', 'v3', 'v2', 'v1'], ),
+                "version": (['v5b', 'v5', 'v4', 'v3', 'v2', 'v1'], ),
                 "stylize": (['x1', 'x2'], ),
                 "deployment": (['huggingface', 'modelscope'], ),
                 "lora_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1}),
@@ -193,7 +177,7 @@ class HMVideoPipelineLoader:
 
         if version == 'v3' or version == 'v4':
             pipeline = HM3VideoPipeline.from_pretrained(sd1_5_dir)
-        elif version == 'v5':
+        elif version == 'v5' or version == 'v5b':
             pipeline = HM5VideoPipeline.from_pretrained(sd1_5_dir)
         else:
             pipeline = HMVideoPipeline.from_pretrained(sd1_5_dir)

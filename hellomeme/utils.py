@@ -18,7 +18,7 @@ import torch
 from PIL import Image
 import subprocess
 from einops import rearrange
-from .tools.utils import transform_points
+from .tools.utils import transform_points, creat_model_from_cloud
 from .tools.hello_3dmm import get_project_points_rect
 
 from safetensors import safe_open
@@ -64,7 +64,9 @@ def load_face_toolkits(dtype=torch.float16, gpu_id=-1, modelscope=False):
             image_encoder=image_encoder
         )
 
-def append_pipline_weights(pipeline, checkpoint_path=None, lora_path=None, vae_path=None, stylize='x1', lora_scale=1.0):
+def append_pipline_weights(pipeline, checkpoint_path=None,
+                           lora_path=None, vae_path=None,
+                           stylize='x1', lora_scale=1.0, modelscope=False):
     ### load customized checkpoint or lora here:
 
     # print("## checkpoint_path", checkpoint_path)
@@ -84,7 +86,7 @@ def append_pipline_weights(pipeline, checkpoint_path=None, lora_path=None, vae_p
                 unet_stats = convert_ldm_unet_checkpoint(raw_stats, pipeline.unet_ref.config)
                 vae_stats = convert_ldm_vae_checkpoint(raw_stats, pipeline.vae.config)
         else:
-            tmp_pipeline = HMImagePipeline.from_pretrained(checkpoint_path)
+            tmp_pipeline = creat_model_from_cloud(HMImagePipeline, checkpoint_path, modelscope=modelscope)
             unet_stats = tmp_pipeline.unet.state_dict()
             vae_stats = tmp_pipeline.vae.state_dict()
 

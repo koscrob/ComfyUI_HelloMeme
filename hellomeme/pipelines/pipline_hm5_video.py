@@ -24,7 +24,8 @@ from diffusers import DPMSolverMultistepScheduler
 from diffusers.utils.torch_utils import randn_tensor
 
 from ..models import (HM3Denoising3D, HM5MotionAdapter,
-                      HM5ReferenceAdapter, HMPipeline, HM5ControlNetBase, HM5SD15ControlProj)
+                      HM5ReferenceAdapter, HM5bReferenceAdapter,
+                      HMPipeline, HM5ControlNetBase, HM5SD15ControlProj)
 
 class HM5VideoPipeline(HMPipeline):
     def caryomitosis(self, version='v5', modelscope=False, **kwargs):
@@ -53,18 +54,32 @@ class HM5VideoPipeline(HMPipeline):
 
         if modelscope:
             from modelscope import snapshot_download
-            hm_reference_dir = snapshot_download('songkey/hm5_reference')
+            if version == 'v5b':
+                hm_reference_dir = snapshot_download('songkey/hm5b_reference')
+            else:
+                hm_reference_dir = snapshot_download('songkey/hm5_reference')
             hm_control_dir = snapshot_download('songkey/hm5_control_base')
             hm_control_proj_dir = snapshot_download('songkey/hm5_control_proj')
             hm_motion_dir = snapshot_download('songkey/hm5_motion')
         else:
-            hm_reference_dir = 'songkey/hm5_reference'
+            if version == 'v5b':
+                hm_reference_dir = 'songkey/hm5b_reference'
+            else:
+                hm_reference_dir = 'songkey/hm5_reference'
             hm_control_dir = 'songkey/hm5_control_base'
             hm_control_proj_dir = 'songkey/hm5_control_proj'
             hm_motion_dir = 'songkey/hm5_motion'
 
-        hm_adapter = HM5ReferenceAdapter.from_pretrained(hm_reference_dir)
+        if version == 'v5b':
+            hm_adapter = HM5bReferenceAdapter.from_pretrained(hm_reference_dir)
+        else:
+            hm_adapter = HM5ReferenceAdapter.from_pretrained(hm_reference_dir)
+
+        # hm_adapter = HM5ReferenceAdapter.from_pretrained(hm_reference_dir)
         motion_adapter = HM5MotionAdapter.from_pretrained(hm_motion_dir)
+
+        stats = torch.load(r"E:\upload2\weights\a100-0617mpsd15vff\checkpoint-41000.pth", map_location='cpu')
+        motion_adapter.load_state_dict(stats['motion'], strict=False)
 
         if isinstance(self.unet, HM3Denoising3D):
             self.unet.insert_reference_adapter(hm_adapter)

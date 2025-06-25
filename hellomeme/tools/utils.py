@@ -11,6 +11,7 @@ import time
 import cv2
 import numpy as np
 import math
+import os.path as osp
 
 def create_onnx_session(onnx_path, gpu_id=None)->onnxruntime.InferenceSession:
     start = time.perf_counter()
@@ -116,3 +117,47 @@ def get_warp_mat_bbox_by_gt_pts_float(gt_pts, base_angle=0.0, dst_size=128, expa
             "scale": scale
         }
         return transform_info
+
+
+def download_file_from_cloud(model_id,
+                             file_name,
+                             modelscope=False,
+                             cache_dir=None,
+                             hf_token='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',):
+    if modelscope:
+        from modelscope import snapshot_download
+        try:
+            model_path = osp.join(snapshot_download(model_id, cache_dir=cache_dir), file_name)
+        except Exception as e:
+            print(e)
+            assert False, "@@ Failed to download model from modelscope"
+    else:
+        from huggingface_hub import hf_hub_download
+        try:
+            model_path = hf_hub_download(model_id, filename=file_name, cache_dir=cache_dir, token=hf_token)
+        except Exception as e:
+            print(e)
+            assert False, "@@ Failed to download model from huggingface hub"
+    return model_path
+
+def creat_model_from_cloud(model_cls,
+                            model_id,
+                            modelscope=False,
+                            cache_dir=None,
+                            hf_token='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'):
+    if modelscope:
+        from modelscope import snapshot_download
+        try:
+            model_path = snapshot_download(model_id, cache_dir=cache_dir)
+        except Exception as e:
+            print(e)
+            assert False, "@@ Failed to download model from modelscope"
+
+        model = model_cls.from_pretrained(model_path)
+    else:
+        try:
+            model = model_cls.from_pretrained(model_id, cache_dir=cache_dir, token=hf_token)
+        except Exception as e:
+            print(e)
+            assert False, "@@ Failed to download model from huggingface hub"
+    return model
