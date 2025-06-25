@@ -4,6 +4,7 @@
 *.pkl
 *.pyc*
 *.pyd*
+*~
 *_fps15.mp4
 *__pycache__/*
 .idea/

@@ -46,7 +46,8 @@ from .hellomeme.utils import (get_drive_expression,
 from .hellomeme import (HMImagePipeline, HMVideoPipeline,
                         HM3ImagePipeline, HM3VideoPipeline,
                         HM5ImagePipeline, HM5VideoPipeline,
-                        download_file_from_cloud)
+                        download_file_from_cloud,
+                        creat_model_from_cloud)
 
 config_path = osp.join(cur_dir, 'hellomeme', 'model_config.json')
 with open(config_path, 'r') as f:
@@ -122,17 +123,16 @@ class HMImagePipelineLoader:
     def load_pipeline(self, checkpoint=None, lora=None, vae=None,
                       version='v2', stylize='x1', deployment='huggingface', lora_scale=1.0, dtype='fp32'):
         dtype = torch.float32 if dtype == 'fp32' else torch.float16
-        if deployment == 'modelscope':
-            from modelscope import snapshot_download
-            sd1_5_dir = snapshot_download('songkey/stable-diffusion-v1-5')
-        else:
-            sd1_5_dir = "songkey/stable-diffusion-v1-5"
+
         if version == 'v3' or version == 'v4':
-            pipeline = HM3ImagePipeline.from_pretrained(sd1_5_dir)
+            pipeline = creat_model_from_cloud(HM3ImagePipeline, "songkey/stable-diffusion-v1-5",
+                                              modelscope=deployment == 'modelscope')
         elif version == 'v5' or version == 'v5b':
-            pipeline = HM5ImagePipeline.from_pretrained(sd1_5_dir)
+            pipeline = creat_model_from_cloud(HM5ImagePipeline, "songkey/stable-diffusion-v1-5",
+                                              modelscope=deployment == 'modelscope')
         else:
-            pipeline = HMImagePipeline.from_pretrained(sd1_5_dir)
+            pipeline = creat_model_from_cloud(HMImagePipeline, "songkey/stable-diffusion-v1-5",
+                                              modelscope=deployment == 'modelscope')
         pipeline.to(dtype=dtype)
         pipeline.caryomitosis(version=version, modelscope=deployment == 'modelscope')
 
@@ -153,7 +153,7 @@ class HMVideoPipelineLoader:
                 "checkpoint": (checkpoint_files, ),
                 "lora": (lora_files, ),
                 "vae": (vae_files, ),
-                "version": (['v5b', 'v5', 'v4', 'v3', 'v2', 'v1'], ),
+                "version": (['v5', 'v4', 'v3', 'v2', 'v1'], ),
                 "stylize": (['x1', 'x2'], ),
                 "deployment": (['huggingface', 'modelscope'], ),
                 "lora_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1}),
@@ -169,24 +169,22 @@ class HMVideoPipelineLoader:
     def load_pipeline(self, checkpoint=None, lora=None, vae=None,
                       version='v2', stylize='x1', deployment='huggingface', lora_scale=1.0, dtype='fp32'):
         dtype = torch.float32 if dtype == 'fp32' else torch.float16
-        if deployment == 'modelscope':
-            from modelscope import snapshot_download
-            sd1_5_dir = snapshot_download('songkey/stable-diffusion-v1-5')
-        else:
-            sd1_5_dir = "songkey/stable-diffusion-v1-5"
 
         if version == 'v3' or version == 'v4':
-            pipeline = HM3VideoPipeline.from_pretrained(sd1_5_dir)
+            pipeline = creat_model_from_cloud(HM3VideoPipeline, "songkey/stable-diffusion-v1-5",
+                                              modelscope=deployment == 'modelscope')
         elif version == 'v5' or version == 'v5b':
-            pipeline = HM5VideoPipeline.from_pretrained(sd1_5_dir)
+            pipeline = creat_model_from_cloud(HM5VideoPipeline, "songkey/stable-diffusion-v1-5",
+                                              modelscope=deployment == 'modelscope')
         else:
-            pipeline = HMVideoPipeline.from_pretrained(sd1_5_dir)
+            pipeline = creat_model_from_cloud(HMVideoPipeline, "songkey/stable-diffusion-v1-5",
+                                              modelscope=deployment == 'modelscope')
         pipeline.to(dtype=dtype)
-        pipeline.caryomitosis(version=version, modelscope=deployment=='modelscope')
+        pipeline.caryomitosis(version=version, modelscope=deployment == 'modelscope')
 
         format_model_path(pipeline, MODEL_CONFIG, checkpoint, vae, lora, stylize, lora_scale, deployment)
 
-        pipeline.insert_hm_modules(version=version, dtype=dtype, modelscope=deployment=='modelscope')
+        pipeline.insert_hm_modules(version=version, dtype=dtype, modelscope=deployment == 'modelscope')
 
         return (pipeline,)
 

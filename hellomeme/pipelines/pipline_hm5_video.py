@@ -75,11 +75,7 @@ class HM5VideoPipeline(HMPipeline):
         else:
             hm_adapter = HM5ReferenceAdapter.from_pretrained(hm_reference_dir)
 
-        # hm_adapter = HM5ReferenceAdapter.from_pretrained(hm_reference_dir)
         motion_adapter = HM5MotionAdapter.from_pretrained(hm_motion_dir)
-
-        stats = torch.load(r"E:\upload2\weights\a100-0617mpsd15vff\checkpoint-41000.pth", map_location='cpu')
-        motion_adapter.load_state_dict(stats['motion'], strict=False)
 
         if isinstance(self.unet, HM3Denoising3D):
             self.unet.insert_reference_adapter(hm_adapter)
