@@ -123,25 +123,21 @@ def download_file_from_cloud(model_id,
                              file_name,
                              modelscope=False,
                              cache_dir=None,
-                             hf_token='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',):
+                             hf_token=None):
     if modelscope:
         from modelscope import snapshot_download
         try:
             model_path = osp.join(snapshot_download(model_id, cache_dir=cache_dir), file_name)
         except Exception as e:
             print(e)
-            assert False, "@@ Failed to download model from modelscope"
+            assert False, "@@ Failed to download model from modelscope (using `hugginface`)"
     else:
-        from huggingface_hub import hf_hub_download, login
+        from huggingface_hub import hf_hub_download
         try:
-            model_path = hf_hub_download(model_id, filename=file_name, cache_dir=cache_dir)
-        except:
-            try:
-                login(token=hf_token)
-                model_path = hf_hub_download(model_id, filename=file_name, cache_dir=cache_dir)
-            except Exception as e:
-                print(e)
-                assert False, "@@ Failed to download model from huggingface hub"
+            model_path = hf_hub_download(model_id, filename=file_name, cache_dir=cache_dir, token=hf_token)
+        except Exception as e:
+            print(e)
+            assert False, "@@ `huggingface-cli login` or using `modelscope`"
     return model_path
 
 def creat_model_from_cloud(model_cls,
@@ -149,7 +145,7 @@ def creat_model_from_cloud(model_cls,
                             modelscope=False,
                             cache_dir=None,
                             subfolder=None,
-                            hf_token='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'):
+                            hf_token=None):
 
     if osp.isfile(model_id) and model_id.endswith('.safetensors'):
         model = model_cls.from_single_file(model_id)
@@ -160,18 +156,13 @@ def creat_model_from_cloud(model_cls,
                 model_path = snapshot_download(model_id, cache_dir=cache_dir)
             except Exception as e:
                 print(e)
-                assert False, "@@ Failed to download model from modelscope"
+                assert False, "@@ Failed to download model from modelscope (using `hugginface`)"
 
             model = model_cls.from_pretrained(model_path, subfolder=subfolder)
         else:
             try:
-                model = model_cls.from_pretrained(model_id, subfolder=subfolder, cache_dir=cache_dir)
-            except:
-                try:
-                    from huggingface_hub import login
-                    login(token=hf_token)
-                    model = model_cls.from_pretrained(model_id, subfolder=subfolder, cache_dir=cache_dir)
-                except Exception as e:
-                    print(e)
-                    assert False, "@@ Failed to download model from huggingface hub"
+                model = model_cls.from_pretrained(model_id, subfolder=subfolder, cache_dir=cache_dir, token=hf_token)
+            except Exception as e:
+                print(e)
+                assert False, "@@ `huggingface-cli login` or using `modelscope`"
     return model
