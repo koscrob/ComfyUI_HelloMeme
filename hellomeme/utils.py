@@ -25,8 +25,8 @@ from safetensors import safe_open
 from diffusers.pipelines.stable_diffusion.convert_from_ckpt import (convert_ldm_unet_checkpoint,
                                                                     convert_ldm_vae_checkpoint)
 from .tools import Hello3DMMPred, HelloARKitBSPred, HelloFaceAlignment, HelloCameraDemo, FanEncoder
-from .pipelines import HMImagePipeline
-from transformers import CLIPVisionModelWithProjection
+from transformers import CLIPVisionModelWithProjection, CLIPTextModel
+from diffusers import AutoencoderKL, UNet2DConditionModel
 
 def generate_random_string(length=8):
     characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
@@ -58,29 +58,24 @@ def load_face_toolkits(dtype=torch.float16, gpu_id=-1, modelscope=False):
 
 def append_pipline_weights(pipeline, lora_path=None, vae_path=None,
                            stylize='x1', lora_scale=1.0, official_id=None, modelscope=False):
-    ### load customized checkpoint or lora here:
+    text_encoder_stats = creat_model_from_cloud(CLIPTextModel, official_id, subfolder='text_encoder', modelscope=modelscope).state_dict()
+    if hasattr(pipeline, 'text_encoder_ref'):
+        pipeline.text_encoder_ref.load_state_dict(text_encoder_stats, strict=True)
 
-    # print("## checkpoint_path", checkpoint_path)
-    # print("## lora_path", lora_path)
-    # print("## vae_path", vae_path)
-
-    unet_stats, vae_stats, text_encoder_stats = None, None, None
-    if not official_id is None:
-        tmp_pipeline = creat_model_from_cloud(HMImagePipeline, official_id, modelscope=modelscope)
-        unet_stats = tmp_pipeline.unet.state_dict()
-        vae_stats = tmp_pipeline.vae.state_dict()
-        text_encoder_stats = tmp_pipeline.text_encoder.state_dict()
-
-        if stylize == 'x1' and hasattr(pipeline, 'unet_ref'):
+    if stylize == 'x1':
+        unet_stats = creat_model_from_cloud(UNet2DConditionModel, official_id, subfolder='unet', modelscope=modelscope).state_dict()
+        if hasattr(pipeline, 'unet_ref'):
             pipeline.unet_ref.load_state_dict(unet_stats, strict=True)
-        if stylize == 'x1' and hasattr(pipeline, 'unet_pre'):
+        if hasattr(pipeline, 'unet_pre'):
             pipeline.unet_pre.load_state_dict(unet_stats, strict=True)
-        if stylize == 'x1' and hasattr(pipeline, 'text_encoder_ref'):
-            pipeline.text_encoder_ref.load_state_dict(text_encoder_stats, strict=True)
+
         pipeline.text_encoder.load_state_dict(text_encoder_stats, strict=True)
+
+        vae_stats = creat_model_from_cloud(AutoencoderKL, official_id, subfolder='vae', modelscope=modelscope).state_dict()
         pipeline.vae.load_state_dict(vae_stats, strict=True)
 
-    if vae_path and not vae_path.startswith('SD1.5 default vae'):
+    if vae_path:
+        vae_stats = None
         if osp.isfile(vae_path):
             print("Loading vae from", vae_path)
             if vae_path.endswith('.safetensors'):
@@ -88,13 +83,13 @@ def append_pipline_weights(pipeline, lora_path=None, vae_path=None,
             else:
                 raw_vae_stats = torch.load(vae_path)
             vae_stats = convert_ldm_vae_checkpoint(raw_vae_stats, pipeline.vae.config)
-
+        elif vae_path.startswith('SD1.5 default vae') and hasattr(pipeline, 'vae_decode') and stylize != 'x1' and official_id:
+            vae_stats = creat_model_from_cloud(AutoencoderKL, official_id, subfolder='vae', modelscope=modelscope)
         if vae_stats:
             try:
-                if hasattr(pipeline, 'vae_decode'):
-                    pipeline.vae_decode.load_state_dict(vae_stats, strict=True)
+                pipeline.vae_decode.load_state_dict(vae_stats, strict=True)
             except:
-                raise ValueError("Failed to load vae from", vae_path)
+                raise ValueError("@@ Failed to load vae from", vae_path)
 
     ### lora
     if lora_path and not lora_path.startswith('None'):
@@ -117,7 +112,7 @@ def append_pipline_weights(pipeline, lora_path=None, vae_path=None,
                                               lora_scale=lora_scale)
 
             except:
-                raise ValueError("Failed to load lora from", lora_path)
+                raise ValueError("@@ Failed to load lora from", lora_path)
 
 def load_safetensors(model_path):
     tensors = {}

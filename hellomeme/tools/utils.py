@@ -123,7 +123,7 @@ def download_file_from_cloud(model_id,
                              file_name,
                              modelscope=False,
                              cache_dir=None,
-                             hf_token='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',):
+                             hf_token='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',):
     if modelscope:
         from modelscope import snapshot_download
         try:
@@ -149,7 +149,7 @@ def creat_model_from_cloud(model_cls,
                             modelscope=False,
                             cache_dir=None,
                             subfolder=None,
-                            hf_token='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'):
+                            hf_token='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'):
 
     if osp.isfile(model_id) and model_id.endswith('.safetensors'):
         model = model_cls.from_single_file(model_id)

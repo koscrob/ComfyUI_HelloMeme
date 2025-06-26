@@ -112,7 +112,7 @@ class HMImagePipelineLoader:
                 "checkpoint": (checkpoint_files, ),
                 "lora": (lora_files, ),
                 "vae": (vae_files, ),
-                "version": (['v5b', 'v5', 'v4', 'v3', 'v2', 'v1'], ),
+                "version": (['v5c', 'v5b', 'v5', 'v4', 'v3', 'v2', 'v1'], ),
                 "stylize": (['x1', 'x2'], ),
                 "deployment": (['huggingface', 'modelscope'], ),
                 "lora_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.1}),
@@ -129,10 +129,10 @@ class HMImagePipelineLoader:
 
         checkpoint_path = get_checkpoint_path(MODEL_CONFIG, checkpoint)
 
-        if version == 'v3' or version == 'v4':
+        if version in ['v3', 'v4']:
             pipeline = creat_model_from_cloud(HM3ImagePipeline, checkpoint_path,
                                               modelscope=deployment == 'modelscope')
-        elif version == 'v5' or version == 'v5b':
+        elif version in ['v5', 'v5b', 'v5c']:
             pipeline = creat_model_from_cloud(HM5ImagePipeline, checkpoint_path,
                                               modelscope=deployment == 'modelscope')
         else:
@@ -178,10 +178,10 @@ class HMVideoPipelineLoader:
 
         checkpoint_path = get_checkpoint_path(MODEL_CONFIG, checkpoint)
 
-        if version == 'v3' or version == 'v4':
+        if version in ['v3', 'v4']:
             pipeline = creat_model_from_cloud(HM3VideoPipeline, checkpoint_path,
                                               modelscope=deployment == 'modelscope')
-        elif version == 'v5' or version == 'v5b':
+        elif version in ['v5', 'v5b', 'v5c']:
             pipeline = creat_model_from_cloud(HM5VideoPipeline, checkpoint_path,
                                               modelscope=deployment == 'modelscope')
         else:
@@ -352,20 +352,26 @@ class HMPipelineImage:
         device = get_torch_device(gpu_id)
         dtype = hm_image_pipeline.dtype
 
-        PROMPT = DEFAULT_PROMPT_NEW if hm_image_pipeline.version == 'v5b' else DEFAULT_PROMPT
+        PROMPT = DEFAULT_PROMPT_NEW if hm_image_pipeline.version in ['v5b', 'v5c'] else DEFAULT_PROMPT
         prompt = PROMPT if prompt == '' else prompt + ", " + PROMPT
 
         image_np = cv2.cvtColor(ref_head_pose['frame'][0], cv2.COLOR_BGR2RGB)
         image_pil = Image.fromarray(image_np)
 
-        ref_trans = ref_head_pose['trans'][0]
-
+        ref_rot, ref_trans = ref_head_pose['rot'], ref_head_pose['trans']
         drive_rot, drive_trans = drive_head_pose['rot'], drive_head_pose['trans']
-        condition = gen_control_heatmaps(drive_rot, drive_trans, ref_trans, 512, trans_ratio)
+
+        condition = gen_control_heatmaps(drive_rot, drive_trans, ref_trans[0], 512, trans_ratio)
+        ref_condition = gen_control_heatmaps(ref_rot, ref_trans, ref_trans[0], 512, 0.0)
         drive_params = dict(condition=condition.unsqueeze(0))
+        ref_params = dict(condition=ref_condition.unsqueeze(0))
         drive_params.update(drive_expression)
+        ref_params.update(ref_expression)
+
         for k, v in drive_params.items():
-            drive_params[k] = v.to(dtype=dtype, device='cpu')
+            drive_params[k] = v.to(dtype=dtype)
+        for k, v in ref_params.items():
+            ref_params[k] = v.to(dtype=dtype, device='cpu')
 
         generator = torch.Generator().manual_seed(seed)
 
@@ -374,6 +380,7 @@ class HMPipelineImage:
             strength=1.0,
             image=image_pil,
             drive_params=drive_params,
+            ref_params=ref_params,
             num_inference_steps=steps,
             negative_prompt=[negative_prompt],
             guidance_scale=guidance_scale,
