@@ -44,7 +44,8 @@ class HM5ImagePipeline(HMPipeline):
         self.vae_decode = copy.deepcopy(self.vae)
         self.text_encoder.cpu()
         self.text_encoder_ref = copy.deepcopy(self.text_encoder)
-        self.safety_checker.cpu()
+        if hasattr(self, 'safety_checker'):
+            del self.safety_checker
 
     def insert_hm_modules(self, version='v5', dtype=torch.float16, modelscope=False):
         self.version = version
@@ -83,6 +84,7 @@ class HM5ImagePipeline(HMPipeline):
         self.vae.to(device='cpu', dtype=dtype).eval()
         self.vae_decode.to(device='cpu', dtype=dtype).eval()
         self.text_encoder.to(device='cpu', dtype=dtype).eval()
+        self.text_encoder_ref.to(device='cpu', dtype=dtype).eval()
 
     @torch.no_grad()
     def __call__(

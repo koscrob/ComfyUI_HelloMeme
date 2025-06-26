@@ -56,42 +56,29 @@ def load_face_toolkits(dtype=torch.float16, gpu_id=-1, modelscope=False):
             image_encoder=image_encoder
         )
 
-def append_pipline_weights(pipeline, checkpoint_path=None,
-                           lora_path=None, vae_path=None,
-                           stylize='x1', lora_scale=1.0, modelscope=False):
+def append_pipline_weights(pipeline, lora_path=None, vae_path=None,
+                           stylize='x1', lora_scale=1.0, official_id=None, modelscope=False):
     ### load customized checkpoint or lora here:
 
     # print("## checkpoint_path", checkpoint_path)
     # print("## lora_path", lora_path)
     # print("## vae_path", vae_path)
 
-    unet_stats, vae_stats = None, None
-    if checkpoint_path and not checkpoint_path.startswith('SD1.5'):
-        if osp.isfile(checkpoint_path):
-            print("Loading checkpoint from", checkpoint_path)
-            if checkpoint_path.endswith('.safetensors'):
-                raw_stats = load_safetensors(checkpoint_path)
-                unet_stats = convert_ldm_unet_checkpoint(raw_stats, pipeline.unet_ref.config)
-                vae_stats = convert_ldm_vae_checkpoint(raw_stats, pipeline.vae.config)
-            else:
-                raw_stats = torch.load(checkpoint_path)
-                unet_stats = convert_ldm_unet_checkpoint(raw_stats, pipeline.unet_ref.config)
-                vae_stats = convert_ldm_vae_checkpoint(raw_stats, pipeline.vae.config)
-        else:
-            tmp_pipeline = creat_model_from_cloud(HMImagePipeline, checkpoint_path, modelscope=modelscope)
-            unet_stats = tmp_pipeline.unet.state_dict()
-            vae_stats = tmp_pipeline.vae.state_dict()
+    unet_stats, vae_stats, text_encoder_stats = None, None, None
+    if not official_id is None:
+        tmp_pipeline = creat_model_from_cloud(HMImagePipeline, official_id, modelscope=modelscope)
+        unet_stats = tmp_pipeline.unet.state_dict()
+        vae_stats = tmp_pipeline.vae.state_dict()
+        text_encoder_stats = tmp_pipeline.text_encoder.state_dict()
 
-        if unet_stats:
-            try:
-                if hasattr(pipeline, 'unet_pre'):
-                    pipeline.unet_pre.load_state_dict(unet_stats, strict=False)
-                pipeline.unet.load_state_dict(unet_stats, strict=False)
-
-                if stylize == 'x2' and hasattr(pipeline, 'unet_ref'):
-                    pipeline.unet_ref.load_state_dict(unet_stats, strict=False)
-            except:
-                raise ValueError("Failed to load checkpoint from", checkpoint_path)
+        if stylize == 'x1' and hasattr(pipeline, 'unet_ref'):
+            pipeline.unet_ref.load_state_dict(unet_stats, strict=True)
+        if stylize == 'x1' and hasattr(pipeline, 'unet_pre'):
+            pipeline.unet_pre.load_state_dict(unet_stats, strict=True)
+        if stylize == 'x1' and hasattr(pipeline, 'text_encoder_ref'):
+            pipeline.text_encoder_ref.load_state_dict(text_encoder_stats, strict=True)
+        pipeline.text_encoder.load_state_dict(text_encoder_stats, strict=True)
+        pipeline.vae.load_state_dict(vae_stats, strict=True)
 
     if vae_path and not vae_path.startswith('SD1.5 default vae'):
         if osp.isfile(vae_path):
@@ -106,8 +93,6 @@ def append_pipline_weights(pipeline, checkpoint_path=None,
             try:
                 if hasattr(pipeline, 'vae_decode'):
                     pipeline.vae_decode.load_state_dict(vae_stats, strict=True)
-                if stylize == 'x2':
-                    pipeline.vae.load_state_dict(vae_stats, strict=True)
             except:
                 raise ValueError("Failed to load vae from", vae_path)
 
@@ -128,7 +113,7 @@ def append_pipline_weights(pipeline, checkpoint_path=None,
                 if stylize == 'x2' and hasattr(pipeline, 'unet_ref'):
                     pipeline.load_lora_weights_sk(pipeline.unet_ref, osp.dirname(lora_path),
                                               weight_name=osp.basename(lora_path),
-                                              adapter_name="lora", text_encoder=None,
+                                              adapter_name="lora", text_encoder=pipeline.text_encoder_ref,
                                               lora_scale=lora_scale)
 
             except:

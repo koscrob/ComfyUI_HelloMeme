@@ -95,12 +95,15 @@ class HMVideoPipeline(HMPipeline):
         if version == 'v1':
             self.mp_control2 = creat_model_from_cloud(HMControlNet2, hm_control2_dir, modelscope=modelscope)
         else:
-            self.mp_control2 = creat_model_from_cloud(HMV2ControlNet2, hm2_control2_dir, modelscope=modelscope)
+            self.mp_control2 = creat_model_from_cloud(HMV2ControlNet2, hm_control2_dir, modelscope=modelscope)
         self.mp_control2.to(device='cpu', dtype=dtype).eval()
 
         self.vae.to(device='cpu', dtype=dtype).eval()
         self.vae_decode.to(device='cpu', dtype=dtype).eval()
         self.text_encoder.to(device='cpu', dtype=dtype).eval()
+        self.text_encoder_ref.to(device='cpu', dtype=dtype).eval()
+        if hasattr(self, 'safety_checker'):
+            del self.safety_checker
 
     @torch.no_grad()
     def __call__(

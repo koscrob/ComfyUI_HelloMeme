@@ -70,15 +70,7 @@ def get_models_files():
 
     return checkpoint_files, vae_files, lora_files
 
-def format_model_path(pipeline, config, checkpoint, vae, lora, stylize, lora_scale, deployment):
-    if checkpoint and not checkpoint.startswith('SD1.5'):
-        if checkpoint in config['sd15']['checkpoints']:
-            checkpoint_path = config['sd15']['checkpoints'][checkpoint]
-        else:
-            checkpoint_path = folder_paths.get_full_path_or_raise("checkpoints", checkpoint)
-    else:
-        checkpoint_path = checkpoint
-
+def format_model_path(pipeline, config, vae, lora, stylize, lora_scale, official_id, deployment):
     if vae and vae.startswith("[checkpoint] "):
         vae_path = folder_paths.get_full_path_or_raise("checkpoints", vae.replace("[checkpoint] ", ""))
     elif vae and vae.startswith("[vae] "):
@@ -95,9 +87,20 @@ def format_model_path(pipeline, config, checkpoint, vae, lora, stylize, lora_sca
     else:
         lora_path = lora
 
-    append_pipline_weights(pipeline, checkpoint_path=checkpoint_path, lora_path=lora_path, vae_path=vae_path,
-                           stylize=stylize, lora_scale=lora_scale, modelscope=deployment == 'modelscope')
+    append_pipline_weights(pipeline, lora_path=lora_path, vae_path=vae_path,
+                           stylize=stylize, lora_scale=lora_scale,
+                           official_id=official_id,
+                           modelscope=deployment == 'modelscope')
 
+def get_checkpoint_path(config, checkpoint):
+    if checkpoint and not checkpoint.startswith('SD1.5'):
+        if checkpoint in config['sd15']['checkpoints']:
+            checkpoint_path = config['sd15']['checkpoints'][checkpoint]
+        else:
+            checkpoint_path = folder_paths.get_full_path_or_raise("checkpoints", checkpoint)
+    else:
+        checkpoint_path = checkpoint
+    return checkpoint_path
 
 class HMImagePipelineLoader:
     @classmethod
@@ -124,19 +127,22 @@ class HMImagePipelineLoader:
                       version='v2', stylize='x1', deployment='huggingface', lora_scale=1.0, dtype='fp32'):
         dtype = torch.float32 if dtype == 'fp32' else torch.float16
 
+        checkpoint_path = get_checkpoint_path(MODEL_CONFIG, checkpoint)
+
         if version == 'v3' or version == 'v4':
-            pipeline = creat_model_from_cloud(HM3ImagePipeline, "songkey/stable-diffusion-v1-5",
+            pipeline = creat_model_from_cloud(HM3ImagePipeline, checkpoint_path,
                                               modelscope=deployment == 'modelscope')
         elif version == 'v5' or version == 'v5b':
-            pipeline = creat_model_from_cloud(HM5ImagePipeline, "songkey/stable-diffusion-v1-5",
+            pipeline = creat_model_from_cloud(HM5ImagePipeline, checkpoint_path,
                                               modelscope=deployment == 'modelscope')
         else:
-            pipeline = creat_model_from_cloud(HMImagePipeline, "songkey/stable-diffusion-v1-5",
+            pipeline = creat_model_from_cloud(HMImagePipeline, checkpoint_path,
                                               modelscope=deployment == 'modelscope')
         pipeline.to(dtype=dtype)
         pipeline.caryomitosis(version=version, modelscope=deployment == 'modelscope')
 
-        format_model_path(pipeline, MODEL_CONFIG, checkpoint, vae, lora, stylize, lora_scale, deployment)
+        format_model_path(pipeline, MODEL_CONFIG, vae, lora, stylize, lora_scale,
+                          'songkey/stable-diffusion-v1-5', deployment)
 
         pipeline.insert_hm_modules(version=version, dtype=dtype, modelscope=deployment == 'modelscope')
         
@@ -170,19 +176,22 @@ class HMVideoPipelineLoader:
                       version='v2', stylize='x1', deployment='huggingface', lora_scale=1.0, dtype='fp32'):
         dtype = torch.float32 if dtype == 'fp32' else torch.float16
 
+        checkpoint_path = get_checkpoint_path(MODEL_CONFIG, checkpoint)
+
         if version == 'v3' or version == 'v4':
-            pipeline = creat_model_from_cloud(HM3VideoPipeline, "songkey/stable-diffusion-v1-5",
+            pipeline = creat_model_from_cloud(HM3VideoPipeline, checkpoint_path,
                                               modelscope=deployment == 'modelscope')
         elif version == 'v5' or version == 'v5b':
-            pipeline = creat_model_from_cloud(HM5VideoPipeline, "songkey/stable-diffusion-v1-5",
+            pipeline = creat_model_from_cloud(HM5VideoPipeline, checkpoint_path,
                                               modelscope=deployment == 'modelscope')
         else:
-            pipeline = creat_model_from_cloud(HMVideoPipeline, "songkey/stable-diffusion-v1-5",
+            pipeline = creat_model_from_cloud(HMVideoPipeline, checkpoint_path,
                                               modelscope=deployment == 'modelscope')
         pipeline.to(dtype=dtype)
         pipeline.caryomitosis(version=version, modelscope=deployment == 'modelscope')
 
-        format_model_path(pipeline, MODEL_CONFIG, checkpoint, vae, lora, stylize, lora_scale, deployment)
+        format_model_path(pipeline, MODEL_CONFIG, vae, lora, stylize, lora_scale,
+                          'songkey/stable-diffusion-v1-5', deployment)
 
         pipeline.insert_hm_modules(version=version, dtype=dtype, modelscope=deployment == 'modelscope')
 

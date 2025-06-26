@@ -146,19 +146,23 @@ def creat_model_from_cloud(model_cls,
                             cache_dir=None,
                             subfolder=None,
                             hf_token='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'):
-    if modelscope:
-        from modelscope import snapshot_download
-        try:
-            model_path = snapshot_download(model_id, cache_dir=cache_dir)
-        except Exception as e:
-            print(e)
-            assert False, "@@ Failed to download model from modelscope"
 
-        model = model_cls.from_pretrained(model_path, subfolder=subfolder)
+    if osp.isfile(model_id) and model_id.endswith('.safetensors'):
+        model = model_cls.from_single_file(model_id)
     else:
-        try:
-            model = model_cls.from_pretrained(model_id, subfolder=subfolder, cache_dir=cache_dir, token=hf_token)
-        except Exception as e:
-            print(e)
-            assert False, "@@ Failed to download model from huggingface hub"
+        if modelscope:
+            from modelscope import snapshot_download
+            try:
+                model_path = snapshot_download(model_id, cache_dir=cache_dir)
+            except Exception as e:
+                print(e)
+                assert False, "@@ Failed to download model from modelscope"
+
+            model = model_cls.from_pretrained(model_path, subfolder=subfolder)
+        else:
+            try:
+                model = model_cls.from_pretrained(model_id, subfolder=subfolder, cache_dir=cache_dir, token=hf_token)
+            except Exception as e:
+                print(e)
+                assert False, "@@ Failed to download model from huggingface hub"
     return model
