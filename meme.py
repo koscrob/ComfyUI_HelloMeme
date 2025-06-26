@@ -1,38 +1,13 @@
 import json
-import os
 import os.path as osp
-import sys
-import importlib.metadata
-
-cur_dir = osp.dirname(osp.abspath(__file__))
-
-installed_packages = [package.name for package in importlib.metadata.distributions()]
-
-REQUIRED = {
-    'diffusers':'0.33.1', 'transformers':'4.46.3', 'einops':'0.8.0', 'opencv-python':'4.10.0.84', 'tqdm':'4.67.0',
-    'pillow':'10.2.0', 'onnxruntime-gpu':'1.18.1', 'onnx':'1.17.0', 'safetensors':'0.4.5',
-    'accelerate':'1.1.1', 'peft':'0.13.2', 'modelscope':'', 'huggingface-hub':''
-}
-
-missing = [name for name in REQUIRED.keys() if name not in installed_packages]
-missing_params = ' '.join([f'{k}' for k in missing])
-print("missing pkgs", missing_params)
-
-if missing:
-    python = sys.executable
-    os.system(f'{sys.executable} -m pip install {missing_params}')
-    # subprocess.check_call([python, '-m', 'pip', 'install', missing_params], stdout=subprocess.DEVNULL)
 
 import numpy as np
 import cv2
-
 from PIL import Image
-
 import torch
 from einops import rearrange
 
 import folder_paths
-
 
 from .hellomeme.utils import (get_drive_expression,
                               get_drive_expression_pd_fgc,
@@ -49,6 +24,7 @@ from .hellomeme import (HMImagePipeline, HMVideoPipeline,
                         download_file_from_cloud,
                         creat_model_from_cloud)
 
+cur_dir = osp.dirname(osp.abspath(__file__))
 config_path = osp.join(cur_dir, 'hellomeme', 'model_config.json')
 with open(config_path, 'r') as f:
     MODEL_CONFIG = json.load(f)

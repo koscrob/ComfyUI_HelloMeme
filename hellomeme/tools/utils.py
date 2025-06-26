@@ -6,7 +6,7 @@
 # @Date   : 8/18/2024
 # @Desc   :
 
-import onnx, onnxruntime
+import onnxruntime
 import time
 import cv2
 import numpy as np
@@ -15,8 +15,6 @@ import os.path as osp
 
 def create_onnx_session(onnx_path, gpu_id=None)->onnxruntime.InferenceSession:
     start = time.perf_counter()
-    onnx_model = onnx.load(onnx_path)
-    onnx.checker.check_model(onnx_model)
     providers = [
         ('CUDAExecutionProvider', {
             'device_id': int(gpu_id),
