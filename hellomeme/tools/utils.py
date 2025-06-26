@@ -132,12 +132,16 @@ def download_file_from_cloud(model_id,
             print(e)
             assert False, "@@ Failed to download model from modelscope"
     else:
-        from huggingface_hub import hf_hub_download
+        from huggingface_hub import hf_hub_download, login
         try:
-            model_path = hf_hub_download(model_id, filename=file_name, cache_dir=cache_dir, token=hf_token)
-        except Exception as e:
-            print(e)
-            assert False, "@@ Failed to download model from huggingface hub"
+            model_path = hf_hub_download(model_id, filename=file_name, cache_dir=cache_dir)
+        except:
+            try:
+                login(token=hf_token)
+                model_path = hf_hub_download(model_id, filename=file_name, cache_dir=cache_dir)
+            except Exception as e:
+                print(e)
+                assert False, "@@ Failed to download model from huggingface hub"
     return model_path
 
 def creat_model_from_cloud(model_cls,
@@ -161,8 +165,13 @@ def creat_model_from_cloud(model_cls,
             model = model_cls.from_pretrained(model_path, subfolder=subfolder)
         else:
             try:
-                model = model_cls.from_pretrained(model_id, subfolder=subfolder, cache_dir=cache_dir, token=hf_token)
-            except Exception as e:
-                print(e)
-                assert False, "@@ Failed to download model from huggingface hub"
+                model = model_cls.from_pretrained(model_id, subfolder=subfolder, cache_dir=cache_dir)
+            except:
+                try:
+                    from huggingface_hub import login
+                    login(token=hf_token)
+                    model = model_cls.from_pretrained(model_id, subfolder=subfolder, cache_dir=cache_dir)
+                except Exception as e:
+                    print(e)
+                    assert False, "@@ Failed to download model from huggingface hub"
     return model
