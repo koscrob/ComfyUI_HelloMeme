@@ -156,10 +156,16 @@ def creat_model_from_cloud(model_cls,
                 print(e)
                 assert False, "@@ Failed to download model from modelscope (using `hugginface`)"
 
-            model = model_cls.from_pretrained(model_path, subfolder=subfolder)
+            if subfolder is None:
+                model = model_cls.from_pretrained(model_path)
+            else:
+                model = model_cls.from_pretrained(model_path, subfolder=subfolder)
         else:
             try:
-                model = model_cls.from_pretrained(model_id, subfolder=subfolder, cache_dir=cache_dir, token=hf_token)
+                if subfolder is None:
+                    model = model_cls.from_pretrained(model_id, cache_dir=cache_dir, token=hf_token)
+                else:
+                    model = model_cls.from_pretrained(model_id, subfolder=subfolder, cache_dir=cache_dir, token=hf_token)
             except Exception as e:
                 print(e)
                 assert False, "@@ `huggingface-cli login` or using `modelscope`"
