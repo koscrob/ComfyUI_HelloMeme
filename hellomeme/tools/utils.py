@@ -149,7 +149,7 @@ def creat_model_from_cloud(model_cls,
 
     from folder_paths import get_full_path
     if model_path := get_full_path('checkpoints', model_id):
-        if model_path.lower().endswith(('.ckpt', '.safetensors')):
+        if model_path.lower().endswith('.safetensors'):
             return model_cls.from_single_file(model_path)
 
     # Try modelscope or hf.
