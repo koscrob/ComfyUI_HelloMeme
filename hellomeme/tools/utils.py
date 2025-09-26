@@ -144,10 +144,12 @@ def creat_model_from_cloud(model_cls,
                             cache_dir=None,
                             subfolder=None,
                             hf_token=None):
-    if osp.isdir(model_id):
-        model = model_cls.from_pretrained(model_id)
-    elif osp.isfile(model_id) and model_id.endswith('.safetensors'):
-        model = model_cls.from_single_file(model_id)
+    from folder_paths import get_folder_paths
+    model_path = osp.join(get_folder_paths('checkpoints'), model_id)
+    if osp.isdir(model_path):
+        model = model_cls.from_pretrained(model_path)
+    elif osp.isfile(model_path) and model_path.lower().endswith(('.ckpt', '.safetensors')):
+        model = model_cls.from_single_file(model_path)
     else:
         if modelscope:
             from modelscope import snapshot_download
