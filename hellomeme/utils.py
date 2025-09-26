@@ -117,7 +117,8 @@ def append_pipline_weights(pipeline, lora_path=None, vae_path=None,
 
 def load_safetensors(model_path):
     tensors = {}
-    with safe_open(model_path, framework="pt", device=0) as f:
+    # TODO: Add device parameter?
+    with safe_open(model_path, framework="pt", device='cpu') as f:
         for k in f.keys():
             tensors[k] = f.get_tensor(k) # loads the full tensor given a key
     return tensors
