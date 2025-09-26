@@ -144,32 +144,34 @@ def creat_model_from_cloud(model_cls,
                             cache_dir=None,
                             subfolder=None,
                             hf_token=None):
-    from folder_paths import get_full_path
-    model_path = get_full_path('checkpoints', model_id)
-    if osp.isfile(model_path) and model_path.lower().endswith(('.ckpt', '.safetensors')):
-        model = model_cls.from_single_file(model_path)
-    elif osp.isdir(model_id):
-        model = model_cls.from_pretrained(model_id)
-    else:
-        if modelscope:
-            from modelscope import snapshot_download
-            try:
-                model_path = snapshot_download(model_id, cache_dir=cache_dir)
-            except Exception as e:
-                print(e)
-                assert False, "@@ Failed to download model from modelscope (using `hugginface`)"
+    if osp.isdir(model_id):
+        return model_cls.from_pretrained(model_id)
 
-            if subfolder is None:
-                model = model_cls.from_pretrained(model_path)
-            else:
-                model = model_cls.from_pretrained(model_path, subfolder=subfolder)
+    from folder_paths import get_full_path
+    if model_path := get_full_path('checkpoints', model_id):
+        if model_path.lower().endswith(('.ckpt', '.safetensors')):
+            return model_cls.from_single_file(model_path)
+
+    # Try modelscope or hf.
+    if modelscope:
+        from modelscope import snapshot_download
+        try:
+            model_path = snapshot_download(model_id, cache_dir=cache_dir)
+        except Exception as e:
+            print(e)
+            assert False, "@@ Failed to download model from modelscope (using `hugginface`)"
+
+        if subfolder is None:
+            model = model_cls.from_pretrained(model_path)
         else:
-            try:
-                if subfolder is None:
-                    model = model_cls.from_pretrained(model_id, cache_dir=cache_dir, token=hf_token)
-                else:
-                    model = model_cls.from_pretrained(model_id, subfolder=subfolder, cache_dir=cache_dir, token=hf_token)
-            except Exception as e:
-                print(e)
-                assert False, "@@ `huggingface-cli login` or using `modelscope`"
+            model = model_cls.from_pretrained(model_path, subfolder=subfolder)
+    else:
+        try:
+            if subfolder is None:
+                model = model_cls.from_pretrained(model_id, cache_dir=cache_dir, token=hf_token)
+            else:
+                model = model_cls.from_pretrained(model_id, subfolder=subfolder, cache_dir=cache_dir, token=hf_token)
+        except Exception as e:
+            print(e)
+            assert False, "@@ `huggingface-cli login` or using `modelscope`"
     return model
