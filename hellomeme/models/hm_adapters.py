@@ -26,25 +26,28 @@ from diffusers.models.attention_processor import (
     AttnProcessor2_0,
 )
 
-from diffusers.utils import (USE_PEFT_BACKEND,
-                             scale_lora_layers,
-                             unscale_lora_layers,
-                             logging, is_torch_version,
-                             is_peft_available,
-                             is_peft_version,
-                             is_transformers_available,
-                             is_transformers_version
-                             )
+from diffusers.utils import logging
+from diffusers.utils.constants import USE_PEFT_BACKEND
+from diffusers.utils.peft_utils import scale_lora_layers, unscale_lora_layers
+from diffusers.utils.import_utils import (
+    is_torch_version,
+    is_peft_available,
+    is_peft_version,
+    is_transformers_available,
+    is_transformers_version,
+)
 
 from diffusers.loaders import StableDiffusionLoraLoaderMixin, TextualInversionLoaderMixin
 from diffusers.models.lora import adjust_lora_scale_text_encoder
 
-from .hm_blocks import (SKReferenceAttentionV3,
-                        SKReferenceAttentionV5,
-                        STKReferenceModule,
-                        SKReferenceAttention,
-                        SKMotionModule,
-                        SKMotionModuleV5)
+from .hm_blocks import (
+    SKReferenceAttentionV3,
+    SKReferenceAttentionV5,
+    STKReferenceModule,
+    SKReferenceAttention,
+    SKMotionModule,
+    SKMotionModuleV5,
+)
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -61,19 +64,19 @@ if is_torch_version(">=", "1.9.0"):
 class HMReferenceAdapter(ModelMixin, ConfigMixin):
     @register_to_config
     def __init__(self,
-                 block_out_channels: Tuple[int] = (320, 640, 1280, 1280),
-                 down_block_types: Tuple[str] = (
+                 block_out_channels: Tuple[int, ...] = (320, 640, 1280, 1280),
+                 down_block_types: Tuple[str, ...] = (
                          "CrossAttnDownBlock2D",
                          "CrossAttnDownBlock2D",
                          "CrossAttnDownBlock2D",
                          "DownBlock2D",
                  ),
-                 up_block_types: Tuple[str] = (
+                 up_block_types: Tuple[str, ...] = (
                          "UpBlock2D",
                          "CrossAttnUpBlock2D",
                          "CrossAttnUpBlock2D",
                          "CrossAttnUpBlock2D"),
-                 num_attention_heads: Optional[Union[int, Tuple[int]]] = 8,
+                 num_attention_heads: Union[int, Tuple[int, ...]] = 8,
                  version='v1'
                  ):
         super().__init__()
@@ -120,8 +123,8 @@ class HMReferenceAdapter(ModelMixin, ConfigMixin):
 
 class HM3ReferenceAdapter(ModelMixin, ConfigMixin):
     @register_to_config
-    def __init__(self, block_down_channels: Tuple[int] = (320, 640, 1280, 1280),
-                     block_up_channels: Tuple[int] = (1280, 1280, 1280, 640),
+    def __init__(self, block_down_channels: Tuple[int, ...] = (320, 640, 1280, 1280),
+                     block_up_channels: Tuple[int, ...] = (1280, 1280, 1280, 640),
                      num_attention_heads: int = 8,
                      use_3d: bool = False):
         super().__init__()
@@ -139,8 +142,8 @@ class HM3ReferenceAdapter(ModelMixin, ConfigMixin):
 
 class HM5bReferenceAdapter(ModelMixin, ConfigMixin):
     @register_to_config
-    def __init__(self, block_down_channels: Tuple[int] = (320, 640, 1280, 1280),
-                     block_up_channels: Tuple[int] = (1280, 1280, 1280, 640),
+    def __init__(self, block_down_channels: Tuple[int, ...] = (320, 640, 1280, 1280),
+                     block_up_channels: Tuple[int, ...] = (1280, 1280, 1280, 640),
                      num_attention_heads: int = 8,
                      use_3d: bool = False):
         super().__init__()
@@ -157,8 +160,8 @@ class HM5bReferenceAdapter(ModelMixin, ConfigMixin):
 
 class HM5ReferenceAdapter(ModelMixin, ConfigMixin):
     @register_to_config
-    def __init__(self, block_down_channels: Tuple[int] = (320, 640, 1280, 1280),
-                     block_up_channels: Tuple[int] = (1280, 1280, 1280, 640),
+    def __init__(self, block_down_channels: Tuple[int, ...] = (320, 640, 1280, 1280),
+                     block_up_channels: Tuple[int, ...] = (1280, 1280, 1280, 640),
                      num_attention_heads: int = 8,
                      use_3d: bool = False):
         super().__init__()
@@ -175,8 +178,8 @@ class HM5ReferenceAdapter(ModelMixin, ConfigMixin):
 
 class HM3MotionAdapter(ModelMixin, ConfigMixin):
     @register_to_config
-    def __init__(self,  block_down_channels: Tuple[int] = (320, 640, 1280, 1280),
-                     block_up_channels: Tuple[int] = (1280, 1280, 1280, 640),
+    def __init__(self,  block_down_channels: Tuple[int, ...] = (320, 640, 1280, 1280),
+                     block_up_channels: Tuple[int, ...] = (1280, 1280, 1280, 640),
                      num_attention_heads: int = 8,
                      use_3d: bool = True):
         super().__init__()
@@ -205,8 +208,8 @@ class HM3MotionAdapter(ModelMixin, ConfigMixin):
 
 class HM5MotionAdapter(ModelMixin, ConfigMixin):
     @register_to_config
-    def __init__(self,  block_down_channels: Tuple[int] = (320, 640, 1280, 1280),
-                     block_up_channels: Tuple[int] = (1280, 1280, 1280, 640),
+    def __init__(self,  block_down_channels: Tuple[int, ...] = (320, 640, 1280, 1280),
+                     block_up_channels: Tuple[int, ...] = (1280, 1280, 1280, 640),
                      num_attention_heads: int = 8):
         super().__init__()
         self.motion_down = nn.ModuleList([])
@@ -331,16 +334,16 @@ class HMPipeline(StableDiffusionImg2ImgPipeline):
                     f" {self.tokenizer.model_max_length} tokens: {removed_text}"
                 )
 
-            if hasattr(text_encoder .config, "use_attention_mask") and text_encoder .config.use_attention_mask:
+            if hasattr(text_encoder.config, "use_attention_mask") and text_encoder.config.use_attention_mask:
                 attention_mask = text_inputs.attention_mask.to(device)
             else:
                 attention_mask = None
 
             if clip_skip is None:
-                prompt_embeds = text_encoder (text_input_ids.to(device), attention_mask=attention_mask)
+                prompt_embeds = text_encoder(text_input_ids.to(device), attention_mask=attention_mask)
                 prompt_embeds = prompt_embeds[0]
             else:
-                prompt_embeds = text_encoder (
+                prompt_embeds = text_encoder(
                     text_input_ids.to(device), attention_mask=attention_mask, output_hidden_states=True
                 )
                 # Access the `hidden_states` first, that contains a tuple of
@@ -354,7 +357,7 @@ class HMPipeline(StableDiffusionImg2ImgPipeline):
                 prompt_embeds = text_encoder .text_model.final_layer_norm(prompt_embeds)
 
         if text_encoder  is not None:
-            prompt_embeds_dtype = text_encoder .dtype
+            prompt_embeds_dtype = text_encoder.dtype
         elif self.unet is not None:
             prompt_embeds_dtype = self.unet.dtype
         else:
