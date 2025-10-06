@@ -19,7 +19,7 @@ from diffusers.image_processor import PipelineImageInput
 from diffusers.utils import deprecate
 from diffusers.utils.torch_utils import randn_tensor
 from diffusers.pipelines.stable_diffusion.pipeline_output import StableDiffusionPipelineOutput
-from diffusers import DPMSolverMultistepScheduler, TCDScheduler
+from diffusers import DPMSolverMultistepScheduler
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_timesteps, retrieve_latents
 from ..models import (HM3Denoising3D, HMPipeline, HM5ReferenceAdapter,
                       HM5bReferenceAdapter, HM5ControlNetBase, HM5SD15ControlProj)
@@ -59,7 +59,7 @@ class HM5ImagePipeline(HMPipeline):
             hm_reference_dir = 'songkey/hm5b_reference'
         else:
             hm_reference_dir = 'songkey/hm5c_reference'
-            hm_control_proj_dir = 'songkey/hm5c_control_proj'
+            hm_control_proj_dir = 'songkey/hm5c_control_proj'              
 
         if isinstance(self.unet, HM3Denoising3D):
             if version == 'v5':
@@ -222,15 +222,14 @@ class HM5ImagePipeline(HMPipeline):
         # 4. Preprocess
         image = self.image_processor.preprocess(image).to(device=device, dtype=prompt_embeds.dtype)
 
-        #scheduler = DPMSolverMultistepScheduler(
-        #    num_train_timesteps=1000,
-        #    beta_start=0.00085,
-        #    beta_end=0.012,
-        #    beta_schedule="scaled_linear",
-        #    # use_karras_sigmas=True,
-        #    algorithm_type="sde-dpmsolver++",
-        #)
-        scheduler = TCDScheduler()
+        scheduler = DPMSolverMultistepScheduler(
+            num_train_timesteps=1000,
+            beta_start=0.00085,
+            beta_end=0.012,
+            beta_schedule="scaled_linear",
+            # use_karras_sigmas=True,
+            algorithm_type="sde-dpmsolver++",
+        )
 
         # 5. set timesteps
         timesteps, num_inference_steps = retrieve_timesteps(scheduler, num_inference_steps, device, timesteps, sigmas)
